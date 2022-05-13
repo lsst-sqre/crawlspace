@@ -11,6 +11,8 @@ from httpx import AsyncClient
 
 from crawlspace import main
 
+from .support.gcs import patch_google_storage
+
 
 @pytest_asyncio.fixture
 async def app() -> AsyncIterator[FastAPI]:
@@ -20,7 +22,8 @@ async def app() -> AsyncIterator[FastAPI]:
     events are sent during test execution.
     """
     async with LifespanManager(main.app):
-        yield main.app
+        with patch_google_storage():
+            yield main.app
 
 
 @pytest_asyncio.fixture

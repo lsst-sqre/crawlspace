@@ -11,4 +11,5 @@ starlette
 uvicorn[standard]
 
 # Other dependencies.
+google-cloud-storage
 safir

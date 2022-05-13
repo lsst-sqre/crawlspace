@@ -1,50 +1,75 @@
 """Handlers for the app's external root, ``/crawlspace/``."""
 
-from fastapi import APIRouter, Depends
+from email.utils import format_datetime
+from mimetypes import guess_type
+from typing import Iterator
+
+from fastapi import APIRouter, Depends, HTTPException, Path, Request
+from fastapi.responses import RedirectResponse, StreamingResponse
+from google.cloud import storage
 from safir.dependencies.logger import logger_dependency
-from safir.metadata import get_metadata
 from structlog.stdlib import BoundLogger
 
 from ..config import config
-from ..models import Index
+from ..dependencies.gcs import gcs_client_dependency
 
-__all__ = ["get_index", "external_router"]
+__all__ = ["get_file", "external_router"]
 
 external_router = APIRouter()
 """FastAPI router for all external handlers."""
 
 
 @external_router.get(
-    "/",
-    description=(
-        "Document the top-level API here. By default it only returns metadata"
-        " about the application."
-    ),
-    response_model=Index,
-    response_model_exclude_none=True,
-    summary="Application metadata",
+    "", response_class=RedirectResponse, summary="Retrieve root"
 )
-async def get_index(
+def get_root(request: Request) -> str:
+    return request.url_for("get_file", path="")
+
+
+@external_router.get(
+    "/{path:path}",
+    description=(
+        "Retrieve a file from the underlying Google Cloud Storage bucket."
+    ),
+    summary="Retrieve a file",
+)
+def get_file(
+    path: str = Path(
+        ..., title="File path", regex=r"^(([^/.]+/)*[^/.]+(\.[^/.]+)?)?$"
+    ),
+    gcs: storage.Client = Depends(gcs_client_dependency),
     logger: BoundLogger = Depends(logger_dependency),
-) -> Index:
-    """GET ``/crawlspace/`` (the app's external root).
+) -> StreamingResponse:
+    if path == "":
+        path = "index.html"
 
-    Customize this handler to return whatever the top-level resource of your
-    application should return. For example, consider listing key API URLs.
-    When doing so, also change or customize the response model in
-    `crawlspace.models.Index`.
+    bucket = gcs.bucket(config.gcs_bucket)
+    blob = bucket.blob(path)
+    if not blob.exists():
+        raise HTTPException(status_code=404, detail="File not found")
 
-    By convention, the root of the external API includes a field called
-    ``metadata`` that provides the same Safir-generated metadata as the
-    internal root endpoint.
-    """
-    # There is no need to log simple requests since uvicorn will do this
-    # automatically, but this is included as an example of how to use the
-    # logger for more complex logging.
-    logger.info("Request for application metadata")
+    def stream() -> Iterator[bytes]:
+        with blob.open("rb") as content:
+            yield from content
 
-    metadata = get_metadata(
-        package_name="crawlspace",
-        application_name=config.name,
-    )
-    return Index(metadata=metadata)
+    try:
+        headers = {
+            "Content-Length": blob.size,
+            "Last-Modified": format_datetime(blob.updated, usegmt=True),
+            "Etag": blob.etag,
+        }
+        if path.endswith(".fits"):
+            media_type = "application/fits"
+        elif path.endswith(".xml"):
+            media_type = "application/x-votable+xml"
+        else:
+            guessed_type, _ = guess_type(path)
+            media_type = guessed_type if guessed_type else "text/plain"
+        return StreamingResponse(
+            stream(), media_type=media_type, headers=headers
+        )
+    except Exception as e:
+        logger.error(f"Failed to retrieve {path}", error=str(e))
+        raise HTTPException(
+            status_code=500, detail="Failed to retrieve file from GCS"
+        )

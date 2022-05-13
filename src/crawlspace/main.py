@@ -10,7 +10,6 @@ called.
 from importlib.metadata import metadata, version
 
 from fastapi import FastAPI
-from safir.dependencies.http_client import http_client_dependency
 from safir.logging import configure_logging
 from safir.middleware.x_forwarded import XForwardedMiddleware
 
@@ -31,22 +30,15 @@ app = FastAPI(
     title="crawlspace",
     description=metadata("crawlspace")["Summary"],
     version=version("crawlspace"),
-    openapi_url=f"/{config.name}/openapi.json",
-    docs_url=f"/{config.name}/docs",
-    redoc_url=f"/{config.name}/redoc",
+    openapi_url=f"{config.url_prefix}/openapi.json",
+    docs_url=f"{config.url_prefix}/docs",
+    redoc_url=f"{config.url_prefix}/redoc",
 )
 """The main FastAPI application for crawlspace."""
 
 # Attach the routers.
 app.include_router(internal_router)
-app.include_router(external_router, prefix=f"/{config.name}")
+app.include_router(external_router, prefix=config.url_prefix)
 
-
-@app.on_event("startup")
-async def startup_event() -> None:
-    app.add_middleware(XForwardedMiddleware)
-
-
-@app.on_event("shutdown")
-async def shutdown_event() -> None:
-    await http_client_dependency.aclose()
+# Add the middleware
+app.add_middleware(XForwardedMiddleware)
