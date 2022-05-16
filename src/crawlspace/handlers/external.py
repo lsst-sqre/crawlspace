@@ -11,6 +11,7 @@ from safir.dependencies.logger import logger_dependency
 from structlog.stdlib import BoundLogger
 
 from ..config import config
+from ..constants import CACHE_MAX_AGE
 from ..dependencies.gcs import gcs_client_dependency
 
 __all__ = ["get_file", "external_router"]
@@ -54,6 +55,7 @@ def get_file(
 
     try:
         headers = {
+            "Cache-Control": f"private, max-age={CACHE_MAX_AGE}",
             "Content-Length": blob.size,
             "Last-Modified": format_datetime(blob.updated, usegmt=True),
             "Etag": blob.etag,

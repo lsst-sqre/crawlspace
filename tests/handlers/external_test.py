@@ -10,6 +10,7 @@ import pytest
 from httpx import AsyncClient
 
 from crawlspace.config import config
+from crawlspace.constants import CACHE_MAX_AGE
 
 
 @pytest.mark.asyncio
@@ -20,6 +21,8 @@ async def test_get_files(client: AsyncClient) -> None:
             continue
         r = await client.get(f"{config.url_prefix}/{path.name}")
         assert r.status_code == 200
+        expected_cache = f"private, max-age={CACHE_MAX_AGE}"
+        assert r.headers["Cache-Control"] == expected_cache
         assert r.headers["Content-Length"] == str(path.stat().st_size)
         assert r.headers["Etag"] == str(path.stat().st_ino)
         mod = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
