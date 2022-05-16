@@ -40,6 +40,8 @@ async def test_get_files(client: AsyncClient) -> None:
             expected_type = "text/plain; charset=utf-8"
         assert r.headers["Content-Type"] == expected_type
 
+        assert r.read() == path.read_bytes()
+
     r = await client.get(f"{config.url_prefix}/Norder4/Dir0/Npix1794.png")
     assert r.status_code == 200
     path = root / "Norder4" / "Dir0" / "Npix1794.png"
@@ -48,6 +50,7 @@ async def test_get_files(client: AsyncClient) -> None:
     assert r.headers["Etag"] == str(path.stat().st_ino)
     mod = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
     assert r.headers["Last-Modified"] == format_datetime(mod, usegmt=True)
+    assert r.read() == path.read_bytes()
 
 
 @pytest.mark.asyncio
@@ -65,6 +68,7 @@ async def test_get_root(client: AsyncClient) -> None:
     assert r.headers["Etag"] == str(index.stat().st_ino)
     mod = datetime.fromtimestamp(index.stat().st_mtime, tz=timezone.utc)
     assert r.headers["Last-Modified"] == format_datetime(mod, usegmt=True)
+    assert r.read() == index.read_bytes()
 
 
 @pytest.mark.asyncio
@@ -83,3 +87,43 @@ async def test_errors(client: AsyncClient) -> None:
         r = await client.get(route)
         print(r.request.url)
         assert r.status_code == 422, f"Status for {route}"
+
+
+@pytest.mark.asyncio
+async def test_cache_validation(client: AsyncClient) -> None:
+    index = Path(__file__).parent.parent / "files" / "index.html"
+
+    r = await client.get(f"{config.url_prefix}/")
+    assert r.status_code == 200
+    etag = r.headers["Etag"]
+    assert etag == str(index.stat().st_ino)
+
+    for header in (
+        f'"{etag}"',
+        f'W/"{etag}"',
+        f'"blablah", "{etag}"',
+        f'invalid stuff, "{etag}"',
+        f'"{etag}", "blahblah"',
+    ):
+        r = await client.get(
+            f"{config.url_prefix}/", headers={"If-None-Match": header}
+        )
+        assert r.status_code == 304, f"If-None-Match: {header}"
+        assert r.headers["Content-Length"] == str(index.stat().st_size)
+        assert r.headers["Content-Type"] == "text/html; charset=utf-8"
+        assert r.headers["Etag"] == etag
+        mod = datetime.fromtimestamp(index.stat().st_mtime, tz=timezone.utc)
+        assert r.headers["Last-Modified"] == format_datetime(mod, usegmt=True)
+        assert r.read() == b""
+
+    for header in (f"{etag}", f"W/{etag}", f'"{etag}"blah', f'"{etag}blah"'):
+        r = await client.get(
+            f"{config.url_prefix}/", headers={"If-None-Match": header}
+        )
+        assert r.status_code == 200
+        assert r.headers["Content-Length"] == str(index.stat().st_size)
+        assert r.headers["Content-Type"] == "text/html; charset=utf-8"
+        assert r.headers["Etag"] == etag
+        mod = datetime.fromtimestamp(index.stat().st_mtime, tz=timezone.utc)
+        assert r.headers["Last-Modified"] == format_datetime(mod, usegmt=True)
+        assert r.read() == index.read_bytes()

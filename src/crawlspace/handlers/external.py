@@ -2,9 +2,9 @@
 
 from email.utils import format_datetime
 from mimetypes import guess_type
-from typing import Iterator
+from typing import Iterator, List
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Request
+from fastapi import APIRouter, Depends, HTTPException, Path, Request, Response
 from fastapi.responses import RedirectResponse, StreamingResponse
 from google.cloud import storage
 from safir.dependencies.logger import logger_dependency
@@ -12,6 +12,7 @@ from structlog.stdlib import BoundLogger
 
 from ..config import config
 from ..constants import CACHE_MAX_AGE
+from ..dependencies.caching import cache_validation_dependency
 from ..dependencies.gcs import gcs_client_dependency
 
 __all__ = ["get_file", "external_router"]
@@ -39,8 +40,9 @@ def get_file(
         ..., title="File path", regex=r"^(([^/.]+/)*[^/.]+(\.[^/.]+)?)?$"
     ),
     gcs: storage.Client = Depends(gcs_client_dependency),
+    etags: List[str] = Depends(cache_validation_dependency),
     logger: BoundLogger = Depends(logger_dependency),
-) -> StreamingResponse:
+) -> Response:
     if path == "":
         path = "index.html"
 
@@ -67,9 +69,17 @@ def get_file(
         else:
             guessed_type, _ = guess_type(path)
             media_type = guessed_type if guessed_type else "text/plain"
-        return StreamingResponse(
-            stream(), media_type=media_type, headers=headers
-        )
+        if blob.etag in etags:
+            return Response(
+                status_code=304,
+                content="",
+                headers=headers,
+                media_type=media_type,
+            )
+        else:
+            return StreamingResponse(
+                stream(), media_type=media_type, headers=headers
+            )
     except Exception as e:
         logger.error(f"Failed to retrieve {path}", error=str(e))
         raise HTTPException(
