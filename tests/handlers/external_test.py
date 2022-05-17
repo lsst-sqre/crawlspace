@@ -72,6 +72,56 @@ async def test_get_root(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
+async def test_head(client: AsyncClient) -> None:
+    root = Path(__file__).parent.parent / "files"
+    for path in root.iterdir():
+        if path.is_dir():
+            continue
+        r = await client.head(f"{config.url_prefix}/{path.name}")
+        assert r.status_code == 200
+        expected_cache = f"private, max-age={CACHE_MAX_AGE}"
+        assert r.headers["Cache-Control"] == expected_cache
+        assert r.headers["Content-Length"] == str(path.stat().st_size)
+        assert r.headers["Etag"] == str(path.stat().st_ino)
+        mod = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
+        assert r.headers["Last-Modified"] == format_datetime(mod, usegmt=True)
+
+        if path.suffix == ".fits":
+            expected_type = "application/fits"
+        elif path.suffix == ".html":
+            expected_type = "text/html; charset=utf-8"
+        elif path.suffix == ".xml":
+            expected_type = "application/x-votable+xml"
+        elif path.suffix == ".jpg":
+            expected_type = "image/jpeg"
+        else:
+            expected_type = "text/plain; charset=utf-8"
+        assert r.headers["Content-Type"] == expected_type
+
+        assert r.read() == b""
+
+    r = await client.head(f"{config.url_prefix}/Norder4/Dir0/Npix1794.png")
+    assert r.status_code == 200
+    path = root / "Norder4" / "Dir0" / "Npix1794.png"
+    assert r.headers["Content-Length"] == str(path.stat().st_size)
+    assert r.headers["Content-Type"] == "image/png"
+    assert r.headers["Etag"] == str(path.stat().st_ino)
+    mod = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
+    assert r.headers["Last-Modified"] == format_datetime(mod, usegmt=True)
+    assert r.read() == b""
+
+    path = root / "index.html"
+    r = await client.head(f"{config.url_prefix}/")
+    assert r.status_code == 200
+    assert r.headers["Content-Length"] == str(path.stat().st_size)
+    assert r.headers["Content-Type"] == "text/html; charset=utf-8"
+    assert r.headers["Etag"] == str(path.stat().st_ino)
+    mod = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
+    assert r.headers["Last-Modified"] == format_datetime(mod, usegmt=True)
+    assert r.read() == b""
+
+
+@pytest.mark.asyncio
 async def test_errors(client: AsyncClient) -> None:
     r = await client.get(f"{config.url_prefix}/missing")
     assert r.status_code == 404
@@ -85,8 +135,9 @@ async def test_errors(client: AsyncClient) -> None:
     ):
         route = f"{config.url_prefix}/{invalid_url}"
         r = await client.get(route)
-        print(r.request.url)
-        assert r.status_code == 422, f"Status for {route}"
+        assert r.status_code == 422, f"Status for GET {route}"
+        r = await client.head(route)
+        assert r.status_code == 422, f"Status for HEAD {route}"
 
 
 @pytest.mark.asyncio
