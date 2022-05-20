@@ -12,7 +12,6 @@ from safir.dependencies.logger import logger_dependency
 from structlog.stdlib import BoundLogger
 
 from ..config import config
-from ..constants import CACHE_MAX_AGE
 from ..dependencies.caching import cache_validation_dependency
 from ..dependencies.gcs import gcs_client_dependency
 
@@ -60,7 +59,7 @@ class CrawlspaceFile:
             Underlying Google Cloud Storage blob.
         """
         headers = {
-            "Cache-Control": f"private, max-age={CACHE_MAX_AGE}",
+            "Cache-Control": f"private, max-age={config.cache_max_age}",
             "Content-Length": blob.size,
             "Last-Modified": format_datetime(blob.updated, usegmt=True),
             "Etag": blob.etag,
