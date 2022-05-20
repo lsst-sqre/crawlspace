@@ -27,7 +27,7 @@ class CrawlspaceFile:
     """Additional response headers to send."""
 
     @classmethod
-    def from_blob(cls, path: str, blob: storage.Blob) -> "CrawlspaceFile":
+    def from_blob(cls, path: str, blob: storage.Blob) -> CrawlspaceFile:
         """Construct a new file from a GCS blob.
 
         Parameters
