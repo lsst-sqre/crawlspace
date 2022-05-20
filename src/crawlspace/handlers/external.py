@@ -8,6 +8,7 @@ from google.cloud import storage
 from safir.dependencies.logger import logger_dependency
 from structlog.stdlib import BoundLogger
 
+from ..constants import PATH_REGEX
 from ..dependencies.etag import etag_validation_dependency
 from ..dependencies.gcs import gcs_client_dependency
 from ..exceptions import GCSFileNotFoundError
@@ -16,20 +17,7 @@ from ..services.file import FileService
 external_router = APIRouter()
 """FastAPI router for all external handlers."""
 
-_PATH_REGEX = r"^(([^/.]+/)*[^/.]+(\.[^/.]+)?)?$"
-"""Regex matching a valid path.
-
-Path must either be empty, or consist of zero or more directory names that
-do not contain ``.``, followed by a file name that does not contain ``.``
-and an optional simple extension introduced by ``.``.
-
-This is much more restrictive than the full POSIX path semantics in an attempt
-to filter out weird paths that may cause problems (such as reading files
-outside the intended tree) when used on POSIX file systems.  This shouldn't be
-a problem for GCS, but odd paths shouldn't be supported on GCS anyway.
-"""
-
-__all__ = ["get_file", "external_router"]
+__all__ = ["external_router", "get_file", "get_root", "head_file"]
 
 
 @external_router.get(
@@ -47,7 +35,7 @@ def get_root(request: Request) -> str:
     summary="Retrieve a file",
 )
 def get_file(
-    path: str = Path(..., title="File path", regex=_PATH_REGEX),
+    path: str = Path(..., title="File path", regex=PATH_REGEX),
     gcs: storage.Client = Depends(gcs_client_dependency),
     etags: List[str] = Depends(etag_validation_dependency),
     logger: BoundLogger = Depends(logger_dependency),
@@ -90,7 +78,7 @@ def get_file(
     summary="Metadata for a file",
 )
 def head_file(
-    path: str = Path(..., title="File path", regex=_PATH_REGEX),
+    path: str = Path(..., title="File path", regex=PATH_REGEX),
     gcs: storage.Client = Depends(gcs_client_dependency),
     logger: BoundLogger = Depends(logger_dependency),
 ) -> Response:
