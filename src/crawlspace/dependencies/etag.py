@@ -10,13 +10,13 @@ from structlog.stdlib import BoundLogger
 _ETAG_REGEX = re.compile(r'(?:W/)?"([^\"\s]+)"$')
 """Regex matching ETag values in ``If-None-Match`` header."""
 
-__all__ = ["cache_validation_dependency"]
+__all__ = ["etag_validation_dependency"]
 
 
-async def cache_validation_dependency(
+async def etag_validation_dependency(
     request: Request, logger: BoundLogger = Depends(logger_dependency)
 ) -> List[str]:
-    """Parse browser cache validation headers.
+    """Parse browser cache ETag validation headers.
 
     Browsers with a cached file that has expired will attempt to revalidate it
     using the ``If-None-Match`` request header.  This dependency parses that

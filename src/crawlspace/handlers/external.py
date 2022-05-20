@@ -12,7 +12,7 @@ from safir.dependencies.logger import logger_dependency
 from structlog.stdlib import BoundLogger
 
 from ..config import config
-from ..dependencies.caching import cache_validation_dependency
+from ..dependencies.etag import etag_validation_dependency
 from ..dependencies.gcs import gcs_client_dependency
 
 external_router = APIRouter()
@@ -130,7 +130,7 @@ def get_root(request: Request) -> str:
 def get_file(
     path: str = Path(..., title="File path", regex=_PATH_REGEX),
     gcs: storage.Client = Depends(gcs_client_dependency),
-    etags: List[str] = Depends(cache_validation_dependency),
+    etags: List[str] = Depends(etag_validation_dependency),
     logger: BoundLogger = Depends(logger_dependency),
 ) -> Response:
     if path == "":
