@@ -25,7 +25,7 @@ class MockBlob(Mock):
         self._path = Path(__file__).parent.parent / "files" / name
         self._exists = self._path.exists()
         if self._exists:
-            self.size = str(self._path.stat().st_size)
+            self.size = self._path.stat().st_size
             mtime = self._path.stat().st_mtime
             self.updated = datetime.fromtimestamp(mtime, tz=timezone.utc)
             self.etag = str(self._path.stat().st_ino)
