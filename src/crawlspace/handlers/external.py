@@ -49,7 +49,7 @@ def get_file(
     except GCSFileNotFoundError:
         raise HTTPException(status_code=404, detail="File not found")
     except Exception as e:
-        logger.error(f"Failed to retrieve {path}", error=str(e))
+        logger.exception(f"Failed to retrieve {path}", error=str(e))
         raise HTTPException(
             status_code=500, detail="Failed to retrieve file from GCS"
         )
@@ -91,7 +91,7 @@ def head_file(
     except GCSFileNotFoundError:
         raise HTTPException(status_code=404, detail="File not found")
     except Exception as e:
-        logger.error(f"Failed to retrieve {path}", error=str(e))
+        logger.exception(f"Failed to retrieve {path}", error=str(e))
         raise HTTPException(
             status_code=500, detail="Failed to retrieve file from GCS"
         )
