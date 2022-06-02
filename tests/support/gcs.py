@@ -37,6 +37,9 @@ class MockBlob(Mock):
         assert mode == "rb"
         return self._path.open("rb")
 
+    def reload(self) -> None:
+        pass
+
 
 class MockBucket(Mock):
     def __init__(self) -> None:

@@ -94,4 +94,5 @@ class FileService:
         blob = bucket.blob(path)
         if not blob.exists():
             raise GCSFileNotFoundError(path)
+        blob.reload()
         return CrawlspaceFile.from_blob(path, blob)
