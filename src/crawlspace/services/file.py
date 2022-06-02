@@ -39,7 +39,7 @@ class CrawlspaceFile:
         """
         headers = {
             "Cache-Control": f"private, max-age={config.cache_max_age}",
-            "Content-Length": blob.size,
+            "Content-Length": str(blob.size),
             "Last-Modified": format_datetime(blob.updated, usegmt=True),
             "Etag": blob.etag,
         }
@@ -94,4 +94,5 @@ class FileService:
         blob = bucket.blob(path)
         if not blob.exists():
             raise GCSFileNotFoundError(path)
+        blob.reload()
         return CrawlspaceFile.from_blob(path, blob)
