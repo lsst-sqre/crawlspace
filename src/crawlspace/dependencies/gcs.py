@@ -21,11 +21,7 @@ class GCSClientDependency:
 
     async def __call__(self) -> storage.client.Client:
         """Return the cached `google.cloud.storage.Client`."""
-        client = _GCS_CLIENT.get(None)
-        if not client:
-            client = storage.Client(project=config.gcs_project)
-            _GCS_CLIENT.set(client)
-        return client
+        return storage.Client(project=config.gcs_project)
 
 
 gcs_client_dependency = GCSClientDependency()
