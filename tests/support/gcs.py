@@ -30,6 +30,9 @@ class MockBlob(Mock):
             self.updated = datetime.fromtimestamp(mtime, tz=timezone.utc)
             self.etag = str(self._path.stat().st_ino)
 
+    def download_as_bytes(self) -> bytes:
+        return self._path.read_bytes()
+
     def exists(self) -> bool:
         return self._exists
 

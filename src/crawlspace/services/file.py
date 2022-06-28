@@ -52,6 +52,10 @@ class CrawlspaceFile:
             media_type = guessed_type if guessed_type else "text/plain"
         return cls(blob=blob, headers=headers, media_type=media_type)
 
+    def download_as_bytes(self) -> bytes:
+        """Download the content from GCS."""
+        return self.blob.download_as_bytes()
+
     def stream(self) -> Iterator[bytes]:
         """Stream the content from GCS."""
         with self.blob.open("rb") as content:

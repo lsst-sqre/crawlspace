@@ -3,7 +3,7 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Request, Response
-from fastapi.responses import RedirectResponse, StreamingResponse
+from fastapi.responses import RedirectResponse
 from google.cloud import storage
 from safir.dependencies.logger import logger_dependency
 from structlog.stdlib import BoundLogger
@@ -40,6 +40,7 @@ def get_file(
     etags: List[str] = Depends(etag_validation_dependency),
     logger: BoundLogger = Depends(logger_dependency),
 ) -> Response:
+    logger.debug("File request", path=path)
     if path == "":
         path = "index.html"
 
@@ -47,6 +48,7 @@ def get_file(
     try:
         crawlspace_file = file_service.get_file(path)
     except GCSFileNotFoundError:
+        logger.debug("File not found", path=path)
         raise HTTPException(status_code=404, detail="File not found")
     except Exception as e:
         logger.exception(f"Failed to retrieve {path}", error=str(e))
@@ -55,6 +57,7 @@ def get_file(
         )
 
     if crawlspace_file.blob.etag in etags:
+        logger.debug("File unchanged", path=path)
         return Response(
             status_code=304,
             content="",
@@ -62,8 +65,11 @@ def get_file(
             media_type=crawlspace_file.media_type,
         )
     else:
-        return StreamingResponse(
-            crawlspace_file.stream(),
+        logger.debug("Returning file", path=path)
+        data = crawlspace_file.download_as_bytes()
+        return Response(
+            status_code=200,
+            content=data,
             media_type=crawlspace_file.media_type,
             headers=crawlspace_file.headers,
         )
@@ -82,6 +88,7 @@ def head_file(
     gcs: storage.Client = Depends(gcs_client_dependency),
     logger: BoundLogger = Depends(logger_dependency),
 ) -> Response:
+    logger.debug("Head request", path=path)
     if path == "":
         path = "index.html"
 
@@ -89,6 +96,7 @@ def head_file(
     try:
         crawlspace_file = file_service.get_file(path)
     except GCSFileNotFoundError:
+        logger.debug("File not found for head request", path=path)
         raise HTTPException(status_code=404, detail="File not found")
     except Exception as e:
         logger.exception(f"Failed to retrieve {path}", error=str(e))
@@ -96,6 +104,7 @@ def head_file(
             status_code=500, detail="Failed to retrieve file from GCS"
         )
 
+    logger.debug("Returning file metadata", path=path)
     return Response(
         status_code=200,
         content="",
