@@ -3,7 +3,7 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Request, Response
-from fastapi.responses import RedirectResponse, StreamingResponse
+from fastapi.responses import RedirectResponse
 from google.cloud import storage
 from safir.dependencies.logger import logger_dependency
 from structlog.stdlib import BoundLogger
@@ -66,8 +66,10 @@ def get_file(
         )
     else:
         logger.debug("Returning file", path=path)
-        return StreamingResponse(
-            crawlspace_file.stream(),
+        data = crawlspace_file.download_as_bytes()
+        return Response(
+            status_code=200,
+            content=data,
             media_type=crawlspace_file.media_type,
             headers=crawlspace_file.headers,
         )
