@@ -126,7 +126,6 @@ async def test_errors(client: AsyncClient) -> None:
     assert r.status_code == 404
 
     for invalid_url in (
-        "/index.html",
         "%2E%2E/%2E%2E/etc/passwd",
         "Norder4/",
         "%2E/index.html",
@@ -177,3 +176,32 @@ async def test_cache_validation(client: AsyncClient) -> None:
         mod = datetime.fromtimestamp(index.stat().st_mtime, tz=timezone.utc)
         assert r.headers["Last-Modified"] == format_datetime(mod, usegmt=True)
         assert r.read() == index.read_bytes()
+
+
+@pytest.mark.asyncio
+async def test_slash_redirect(client: AsyncClient) -> None:
+    bad_url = f"{config.url_prefix}//Norder4/Dir0/Npix1794.png"
+    good_url = f"{config.url_prefix}/Norder4/Dir0/Npix1794.png"
+    r = await client.get(bad_url)
+    print(r.text)
+    assert r.status_code == 301
+    assert r.headers["Location"] == good_url
+    r = await client.head(bad_url)
+    assert r.status_code == 301
+    assert r.headers["Location"] == good_url
+
+    bad_url = f"{config.url_prefix}/Norder4/Dir0//Npix1794.png"
+    r = await client.get(bad_url)
+    assert r.status_code == 301
+    assert r.headers["Location"] == good_url
+    r = await client.head(bad_url)
+    assert r.status_code == 301
+    assert r.headers["Location"] == good_url
+
+    url = f"{config.url_prefix}//"
+    r = await client.get(url)
+    assert r.status_code == 301
+    assert r.headers["Location"] == f"{config.url_prefix}/"
+    r = await client.head(url)
+    assert r.status_code == 301
+    assert r.headers["Location"] == f"{config.url_prefix}/"

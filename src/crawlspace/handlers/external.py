@@ -1,5 +1,6 @@
 """Handlers for the app's external root, ``/crawlspace/``."""
 
+import re
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Request, Response
@@ -35,12 +36,22 @@ def get_root(request: Request) -> str:
     summary="Retrieve a file",
 )
 def get_file(
+    request: Request,
     path: str = Path(..., title="File path", regex=PATH_REGEX),
     gcs: storage.Client = Depends(gcs_client_dependency),
     etags: List[str] = Depends(etag_validation_dependency),
     logger: BoundLogger = Depends(logger_dependency),
 ) -> Response:
     logger.debug("File request", path=path)
+
+    # Duplicate slash characters may be added by accident.  Send a permanent
+    # redirect to a URL without them.
+    if "//" in request.url.path:
+        path = re.sub("/+", "/", request.url.path)
+        return RedirectResponse(path, status_code=301)
+
+    # index.html is only supported at the top level, and directory listings
+    # are not supported.
     if path == "":
         path = "index.html"
 
@@ -84,11 +95,21 @@ def get_file(
     summary="Metadata for a file",
 )
 def head_file(
+    request: Request,
     path: str = Path(..., title="File path", regex=PATH_REGEX),
     gcs: storage.Client = Depends(gcs_client_dependency),
     logger: BoundLogger = Depends(logger_dependency),
 ) -> Response:
     logger.debug("Head request", path=path)
+
+    # Duplicate slash characters may be added by accident.  Send a permanent
+    # redirect to a URL without them.
+    if "//" in request.url.path:
+        path = re.sub("/+", "/", request.url.path)
+        return RedirectResponse(path, status_code=301)
+
+    # index.html is only supported at the top level, and directory listings
+    # are not supported.
     if path == "":
         path = "index.html"
 
