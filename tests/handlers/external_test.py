@@ -23,7 +23,7 @@ async def test_get_files(client: AsyncClient) -> None:
         expected_cache = f"private, max-age={config.cache_max_age}"
         assert r.headers["Cache-Control"] == expected_cache
         assert r.headers["Content-Length"] == str(path.stat().st_size)
-        assert r.headers["Etag"] == str(path.stat().st_ino)
+        assert r.headers["Etag"] == f'"{str(path.stat().st_ino)}"'
         mod = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
         assert r.headers["Last-Modified"] == format_datetime(mod, usegmt=True)
 
@@ -46,7 +46,7 @@ async def test_get_files(client: AsyncClient) -> None:
     path = root / "Norder4" / "Dir0" / "Npix1794.png"
     assert r.headers["Content-Length"] == str(path.stat().st_size)
     assert r.headers["Content-Type"] == "image/png"
-    assert r.headers["Etag"] == str(path.stat().st_ino)
+    assert r.headers["Etag"] == f'"{str(path.stat().st_ino)}"'
     mod = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
     assert r.headers["Last-Modified"] == format_datetime(mod, usegmt=True)
     assert r.read() == path.read_bytes()
@@ -64,7 +64,7 @@ async def test_get_root(client: AsyncClient) -> None:
     assert r.status_code == 200
     assert r.headers["Content-Length"] == str(index.stat().st_size)
     assert r.headers["Content-Type"] == "text/html; charset=utf-8"
-    assert r.headers["Etag"] == str(index.stat().st_ino)
+    assert r.headers["Etag"] == f'"{str(index.stat().st_ino)}"'
     mod = datetime.fromtimestamp(index.stat().st_mtime, tz=timezone.utc)
     assert r.headers["Last-Modified"] == format_datetime(mod, usegmt=True)
     assert r.read() == index.read_bytes()
@@ -81,7 +81,7 @@ async def test_head(client: AsyncClient) -> None:
         expected_cache = f"private, max-age={config.cache_max_age}"
         assert r.headers["Cache-Control"] == expected_cache
         assert r.headers["Content-Length"] == str(path.stat().st_size)
-        assert r.headers["Etag"] == str(path.stat().st_ino)
+        assert r.headers["Etag"] == f'"{str(path.stat().st_ino)}"'
         mod = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
         assert r.headers["Last-Modified"] == format_datetime(mod, usegmt=True)
 
@@ -104,7 +104,7 @@ async def test_head(client: AsyncClient) -> None:
     path = root / "Norder4" / "Dir0" / "Npix1794.png"
     assert r.headers["Content-Length"] == str(path.stat().st_size)
     assert r.headers["Content-Type"] == "image/png"
-    assert r.headers["Etag"] == str(path.stat().st_ino)
+    assert r.headers["Etag"] == f'"{str(path.stat().st_ino)}"'
     mod = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
     assert r.headers["Last-Modified"] == format_datetime(mod, usegmt=True)
     assert r.read() == b""
@@ -114,7 +114,7 @@ async def test_head(client: AsyncClient) -> None:
     assert r.status_code == 200
     assert r.headers["Content-Length"] == str(path.stat().st_size)
     assert r.headers["Content-Type"] == "text/html; charset=utf-8"
-    assert r.headers["Etag"] == str(path.stat().st_ino)
+    assert r.headers["Etag"] == f'"{str(path.stat().st_ino)}"'
     mod = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
     assert r.headers["Last-Modified"] == format_datetime(mod, usegmt=True)
     assert r.read() == b""
@@ -145,14 +145,14 @@ async def test_cache_validation(client: AsyncClient) -> None:
     r = await client.get(f"{config.url_prefix}/")
     assert r.status_code == 200
     etag = r.headers["Etag"]
-    assert etag == str(index.stat().st_ino)
+    assert etag == f'"{str(index.stat().st_ino)}"'
 
     for header in (
-        f'"{etag}"',
-        f'W/"{etag}"',
-        f'"blablah", "{etag}"',
-        f'invalid stuff, "{etag}"',
-        f'"{etag}", "blahblah"',
+        etag,
+        f"W/{etag}",
+        f'"blablah", {etag}',
+        f"invalid stuff, {etag}",
+        f'{etag}, "blahblah"',
     ):
         r = await client.get(
             f"{config.url_prefix}/", headers={"If-None-Match": header}
@@ -165,7 +165,12 @@ async def test_cache_validation(client: AsyncClient) -> None:
         assert r.headers["Last-Modified"] == format_datetime(mod, usegmt=True)
         assert r.read() == b""
 
-    for header in (f"{etag}", f"W/{etag}", f'"{etag}"blah', f'"{etag}blah"'):
+    for header in (
+        str(index.stat().st_ino),
+        "W/" + str(index.stat().st_ino),
+        etag + "blah",
+        str(index.stat().st_ino) + "blah",
+    ):
         r = await client.get(
             f"{config.url_prefix}/", headers={"If-None-Match": header}
         )
