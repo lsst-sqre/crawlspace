@@ -100,9 +100,9 @@ httpx==0.23.0 \
     # via
     #   -c requirements/main.txt
     #   -r requirements/dev.in
-identify==2.5.2 \
-    --hash=sha256:a3d4c096b384d50d5e6dc5bc8b9bc44f1f61cefebd750a7b3e9f939b53fb214d \
-    --hash=sha256:feaa9db2dc0ce333b453ce171c0cf1247bbfde2c55fc6bb785022d411a1b78b5
+identify==2.5.3 \
+    --hash=sha256:25851c8c1370effb22aaa3c987b30449e9ff0cece408f810ae6ce408fdd20893 \
+    --hash=sha256:887e7b91a1be152b0d46bbf072130235a8117392b9f1828446079a816a05ef44
     # via pre-commit
 idna==3.3 \
     --hash=sha256:84d9dd047ffa80596e0f246e2eab0b391788b0503584e8945f2368256d2735ff \
@@ -151,7 +151,9 @@ nodeenv==1.7.0 \
 packaging==21.3 \
     --hash=sha256:dd47c42927d89ab911e606518907cc2d3a1f38bbd026385970643f9c5b8ecfeb \
     --hash=sha256:ef103e05f519cdc783ae24ea4e2e0f508a9c99b2d4969652eed6a2e1ea5bd522
-    # via pytest
+    # via
+    #   pytest
+    #   pytest-sugar
 platformdirs==2.5.2 \
     --hash=sha256:027d8e83a2d7de06bbac4e5ef7e023c02b863d7ea5d079477e722bb41ab25788 \
     --hash=sha256:58c8abb07dcb441e6ee4b11d8df0ac856038f944ab98b7be6b27b2a3c7feef19
@@ -179,6 +181,7 @@ pytest==7.1.2 \
     #   -r requirements/dev.in
     #   pytest-asyncio
     #   pytest-cov
+    #   pytest-sugar
 pytest-asyncio==0.19.0 \
     --hash=sha256:7a97e37cfe1ed296e2e84941384bdd37c376453912d397ed39293e0916f521fa \
     --hash=sha256:ac4ebf3b6207259750bc32f4c1d8fcd7e79739edbc67ad0c58dd150b1d072fed
@@ -186,6 +189,10 @@ pytest-asyncio==0.19.0 \
 pytest-cov==3.0.0 \
     --hash=sha256:578d5d15ac4a25e5f961c938b85a05b09fdaae9deef3bb6de9a6e766622ca7a6 \
     --hash=sha256:e7f0f5b1617d2210a2cabc266dfe2f4c75a8d32fb89eafb7ad9d06f6d076d470
+    # via -r requirements/dev.in
+pytest-sugar==0.9.5 \
+    --hash=sha256:3da42de32ce4e1e95b448d61c92804433f5d4058c0a765096991c2e93d5a289f \
+    --hash=sha256:eea78b6f15b635277d3d90280cd386d8feea1cab0f9be75947a626e8b02b477d
     # via -r requirements/dev.in
 pyyaml==6.0 \
     --hash=sha256:0283c35a6a9fbf047493e3a0ce8d79ef5030852c51e9d911a27badfde0605293 \
@@ -239,6 +246,9 @@ sniffio==1.2.0 \
     #   asgi-lifespan
     #   httpcore
     #   httpx
+termcolor==1.1.0 \
+    --hash=sha256:1d6d69ce66211143803fbc56652b41d73b4a400a2891d7bf7a1cdf4c02de613b
+    # via pytest-sugar
 toml==0.10.2 \
     --hash=sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b \
     --hash=sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f
@@ -256,9 +266,9 @@ typing-extensions==4.3.0 \
     # via
     #   -c requirements/main.txt
     #   mypy
-virtualenv==20.16.2 \
-    --hash=sha256:0ef5be6d07181946891f5abc8047fda8bc2f0b4b9bf222c64e6e8963baee76db \
-    --hash=sha256:635b272a8e2f77cb051946f46c60a54ace3cb5e25568228bd6b57fc70eca9ff3
+virtualenv==20.16.3 \
+    --hash=sha256:4193b7bc8a6cd23e4eb251ac64f29b4398ab2c233531e66e40b19a6b7b0d30c1 \
+    --hash=sha256:d86ea0bb50e06252d79e6c241507cb904fcd66090c3271381372d6221a3970f9
     # via pre-commit
 
 # WARNING: The following packages were not pinned, but pip requires them to be

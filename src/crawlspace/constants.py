@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-PATH_REGEX = r"^(([^/.]+/)*[^/.]+(\.[^/.]+)?)?$"
+PATH_REGEX = r"^(/*([^/.]+/+)*[^/.]+(\.[^/.]+)?|/+)?$"
 """Regex matching a valid path.
 
 Path must either be empty, or consist of zero or more directory names that
 do not contain ``.``, followed by a file name that does not contain ``.``
-and an optional simple extension introduced by ``.``.
+and an optional simple extension introduced by ``.``.  Duplicate ``/``
+characters are allowed (but will result in a redirect).
 
 This is much more restrictive than the full POSIX path semantics in an attempt
 to filter out weird paths that may cause problems (such as reading files
