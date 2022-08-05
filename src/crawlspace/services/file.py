@@ -41,7 +41,7 @@ class CrawlspaceFile:
             "Cache-Control": f"private, max-age={config.cache_max_age}",
             "Content-Length": str(blob.size),
             "Last-Modified": format_datetime(blob.updated, usegmt=True),
-            "Etag": blob.etag,
+            "Etag": f'"{blob.etag}"',
         }
         if path.endswith(".fits"):
             media_type = "application/fits"
