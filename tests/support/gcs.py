@@ -64,6 +64,7 @@ class MockStorageClient(Mock):
 @contextmanager
 def patch_google_storage() -> Iterator[None]:
     """Mock Google Cloud Storage API for testing."""
+    mock_storage = MockStorageClient()
     with patch.object(storage, "Client") as mock_gcs:
-        mock_gcs.return_value = MockStorageClient()
+        mock_gcs.return_value = mock_storage
         yield
