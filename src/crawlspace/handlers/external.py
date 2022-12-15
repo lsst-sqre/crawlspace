@@ -4,7 +4,7 @@ import re
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Request, Response
-from fastapi.responses import RedirectResponse
+from fastapi.responses import PlainTextResponse, RedirectResponse
 from google.cloud import storage
 from safir.dependencies.logger import logger_dependency
 from structlog.stdlib import BoundLogger
@@ -26,6 +26,14 @@ __all__ = ["external_router", "get_file", "get_root", "head_file"]
 )
 def get_root(request: Request) -> str:
     return request.url_for("get_file", path="")
+
+
+@external_router.get("/headers", response_class=PlainTextResponse)
+async def get_headers(request: Request) -> str:
+    output = ""
+    for key, value in request.headers.items():
+        output += f"{key}: {value}\n"
+    return output
 
 
 @external_router.get(
