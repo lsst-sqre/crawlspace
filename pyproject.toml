@@ -1,3 +1,33 @@
+[project]
+# https://packaging.python.org/en/latest/specifications/declaring-project-metadata/
+name = "crawlspace"
+description = "Static file server backed by GCS."
+license = { file = "LICENSE" }
+readme = "README.md"
+keywords = ["rubin", "lsst"]
+# https://pypi.org/classifiers/
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Natural Language :: English",
+    "Operating System :: POSIX",
+    "Typing :: Typed",
+]
+requires-python = ">=3.11"
+# Use requirements/main.in for runtime dependencies instead.
+dependencies = []
+dynamic = ["version"]
+
+[project.scripts]
+crawlspace = "crawlspace.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/lsst-sqre/crawlspace"
+Source = "https://github.com/lsst-sqre/crawlspace"
+
 [build-system]
 requires = [
     "setuptools>=42",
@@ -49,8 +79,8 @@ exclude = '''
 # Multi-line strings are implicitly treated by black as regular expressions
 
 [tool.isort]
-include_trailing_comma = true
-multi_line_output = 3
+profile = "black"
+line_length = 79
 known_first_party = ["crawlspace", "tests"]
 skip = ["docs/conf.py"]
 
@@ -68,3 +98,15 @@ python_files = [
     "tests/*.py",
     "tests/*/*.py"
 ]
+
+[tool.mypy]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+ignore_missing_imports = true
+local_partial_types = true
+no_implicit_reexport = true
+show_error_codes = true
+strict_equality = true
+warn_redundant_casts = true
+warn_unreachable = true
+warn_unused_ignores = true
