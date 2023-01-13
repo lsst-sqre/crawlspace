@@ -32,9 +32,9 @@ class CrawlspaceFile:
 
         Parameters
         ----------
-        path : `str`
+        path
             Path to the file.
-        blob : `google.cloud.storage.Blob`
+        blob
             Underlying Google Cloud Storage blob.
         """
         headers = {
@@ -70,7 +70,7 @@ class FileService:
 
     Parameters
     ----------
-    gcs : `google.cloud.storage.Client`
+    gcs
         Google Cloud Storage client to use to retrieve the file and its
         metadata.
     """
@@ -86,7 +86,7 @@ class FileService:
 
         Parameters
         ----------
-        path : `str`
+        path
             Path to the file.
 
         Raises
