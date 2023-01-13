@@ -1,7 +1,6 @@
 """Handlers for the app's external root, ``/crawlspace/``."""
 
 import re
-from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Request, Response
 from fastapi.responses import RedirectResponse
@@ -39,7 +38,7 @@ def get_file(
     request: Request,
     path: str = Path(..., title="File path", regex=PATH_REGEX),
     gcs: storage.Client = Depends(gcs_client_dependency),
-    etags: List[str] = Depends(etag_validation_dependency),
+    etags: list[str] = Depends(etag_validation_dependency),
     logger: BoundLogger = Depends(logger_dependency),
 ) -> Response:
     logger.debug("File request", path=path)

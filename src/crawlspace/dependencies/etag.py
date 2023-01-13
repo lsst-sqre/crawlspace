@@ -1,7 +1,6 @@
 """Dependency to handle browser cache requests."""
 
 import re
-from typing import List
 
 from fastapi import Depends, Request
 from safir.dependencies.logger import logger_dependency
@@ -15,7 +14,7 @@ __all__ = ["etag_validation_dependency"]
 
 async def etag_validation_dependency(
     request: Request, logger: BoundLogger = Depends(logger_dependency)
-) -> List[str]:
+) -> list[str]:
     """Parse browser cache ETag validation headers.
 
     Browsers with a cached file that has expired will attempt to revalidate it

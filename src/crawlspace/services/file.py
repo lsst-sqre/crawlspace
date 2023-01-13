@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 from email.utils import format_datetime
 from mimetypes import guess_type
-from typing import Dict, Iterator
 
 from google.cloud import storage
 
@@ -23,7 +23,7 @@ class CrawlspaceFile:
     media_type: str
     """The media type of the underlying file."""
 
-    headers: Dict[str, str]
+    headers: dict[str, str]
     """Additional response headers to send."""
 
     @classmethod
