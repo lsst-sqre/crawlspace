@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from typing import Optional
 
 __all__ = ["Configuration", "config"]
 
@@ -22,7 +21,7 @@ class Configuration:
     environment variable.
     """
 
-    gcs_project: Optional[str] = os.getenv("CRAWLSPACE_PROJECT")
+    gcs_project: str = os.getenv("CRAWLSPACE_PROJECT", "None")
     """The GCS project from which to serve files.
 
     Set with the ``CRAWLSPACE_PROJECT`` environment variable.
