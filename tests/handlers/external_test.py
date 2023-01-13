@@ -8,12 +8,15 @@ from pathlib import Path
 
 import pytest
 from httpx import AsyncClient
+from safir.testing.gcs import MockStorageClient
 
 from crawlspace.config import config
 
 
 @pytest.mark.asyncio
-async def test_get_files(client: AsyncClient) -> None:
+async def test_get_files(
+    client: AsyncClient, mock_gcs: MockStorageClient
+) -> None:
     root = Path(__file__).parent.parent / "files"
     for path in root.iterdir():
         if path.is_dir():
@@ -53,7 +56,9 @@ async def test_get_files(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_get_root(client: AsyncClient) -> None:
+async def test_get_root(
+    client: AsyncClient, mock_gcs: MockStorageClient
+) -> None:
     index = Path(__file__).parent.parent / "files" / "index.html"
 
     r = await client.get(config.url_prefix)
@@ -71,7 +76,7 @@ async def test_get_root(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_head(client: AsyncClient) -> None:
+async def test_head(client: AsyncClient, mock_gcs: MockStorageClient) -> None:
     root = Path(__file__).parent.parent / "files"
     for path in root.iterdir():
         if path.is_dir():
@@ -121,7 +126,9 @@ async def test_head(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_errors(client: AsyncClient) -> None:
+async def test_errors(
+    client: AsyncClient, mock_gcs: MockStorageClient
+) -> None:
     r = await client.get(f"{config.url_prefix}/missing")
     assert r.status_code == 404
 
@@ -139,7 +146,9 @@ async def test_errors(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_cache_validation(client: AsyncClient) -> None:
+async def test_cache_validation(
+    client: AsyncClient, mock_gcs: MockStorageClient
+) -> None:
     index = Path(__file__).parent.parent / "files" / "index.html"
 
     r = await client.get(f"{config.url_prefix}/")
@@ -184,7 +193,9 @@ async def test_cache_validation(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_slash_redirect(client: AsyncClient) -> None:
+async def test_slash_redirect(
+    client: AsyncClient, mock_gcs: MockStorageClient
+) -> None:
     bad_url = f"{config.url_prefix}//Norder4/Dir0/Npix1794.png"
     good_url = f"{config.url_prefix}/Norder4/Dir0/Npix1794.png"
     r = await client.get(bad_url)
