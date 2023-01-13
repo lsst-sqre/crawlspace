@@ -8,7 +8,7 @@ class GCSFileNotFoundError(Exception):
 
     Parameters
     ----------
-    path : `str`
+    path
         Bucket path that was not found.
     """
 
