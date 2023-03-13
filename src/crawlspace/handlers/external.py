@@ -24,7 +24,7 @@ __all__ = ["external_router", "get_file", "get_root", "head_file"]
     "", response_class=RedirectResponse, summary="Retrieve root"
 )
 def get_root(request: Request) -> str:
-    return request.url_for("get_file", path="")
+    return str(request.url_for("get_file", path=""))
 
 
 @external_router.get(
