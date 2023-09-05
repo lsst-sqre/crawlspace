@@ -199,7 +199,6 @@ async def test_slash_redirect(
     bad_url = f"{config.url_prefix}//Norder4/Dir0/Npix1794.png"
     good_url = f"{config.url_prefix}/Norder4/Dir0/Npix1794.png"
     r = await client.get(bad_url)
-    print(r.text)
     assert r.status_code == 301
     assert r.headers["Location"] == good_url
     r = await client.head(bad_url)
