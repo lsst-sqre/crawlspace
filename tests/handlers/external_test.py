@@ -167,7 +167,7 @@ async def test_cache_validation(
             f"{config.url_prefix}/", headers={"If-None-Match": header}
         )
         assert r.status_code == 304, f"If-None-Match: {header}"
-        assert r.headers["Content-Length"] == str(index.stat().st_size)
+        assert "Content-Length" not in r.headers
         assert r.headers["Content-Type"] == "text/html; charset=utf-8"
         assert r.headers["Etag"] == etag
         mod = datetime.fromtimestamp(index.stat().st_mtime, tz=timezone.utc)

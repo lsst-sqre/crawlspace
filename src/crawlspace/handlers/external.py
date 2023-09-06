@@ -68,6 +68,7 @@ def get_file(
 
     if crawlspace_file.blob.etag in etags:
         logger.debug("File unchanged", path=path)
+        del crawlspace_file.headers["Content-Length"]
         return Response(
             status_code=304,
             content="",
