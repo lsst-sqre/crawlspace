@@ -36,7 +36,7 @@ def get_root(request: Request) -> str:
 )
 def get_file(
     request: Request,
-    path: str = Path(..., title="File path", regex=PATH_REGEX),
+    path: str = Path(..., title="File path", pattern=PATH_REGEX),
     gcs: storage.Client = Depends(gcs_client_dependency),
     etags: list[str] = Depends(etag_validation_dependency),
     logger: BoundLogger = Depends(logger_dependency),
@@ -68,6 +68,7 @@ def get_file(
 
     if crawlspace_file.blob.etag in etags:
         logger.debug("File unchanged", path=path)
+        del crawlspace_file.headers["Content-Length"]
         return Response(
             status_code=304,
             content="",
@@ -95,7 +96,7 @@ def get_file(
 )
 def head_file(
     request: Request,
-    path: str = Path(..., title="File path", regex=PATH_REGEX),
+    path: str = Path(..., title="File path", pattern=PATH_REGEX),
     gcs: storage.Client = Depends(gcs_client_dependency),
     logger: BoundLogger = Depends(logger_dependency),
 ) -> Response:

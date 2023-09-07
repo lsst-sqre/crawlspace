@@ -167,7 +167,7 @@ async def test_cache_validation(
             f"{config.url_prefix}/", headers={"If-None-Match": header}
         )
         assert r.status_code == 304, f"If-None-Match: {header}"
-        assert r.headers["Content-Length"] == str(index.stat().st_size)
+        assert "Content-Length" not in r.headers
         assert r.headers["Content-Type"] == "text/html; charset=utf-8"
         assert r.headers["Etag"] == etag
         mod = datetime.fromtimestamp(index.stat().st_mtime, tz=timezone.utc)
@@ -199,7 +199,6 @@ async def test_slash_redirect(
     bad_url = f"{config.url_prefix}//Norder4/Dir0/Npix1794.png"
     good_url = f"{config.url_prefix}/Norder4/Dir0/Npix1794.png"
     r = await client.get(bad_url)
-    print(r.text)
     assert r.status_code == 301
     assert r.headers["Location"] == good_url
     r = await client.head(bad_url)

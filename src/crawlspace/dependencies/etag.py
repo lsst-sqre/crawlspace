@@ -20,7 +20,7 @@ async def etag_validation_dependency(
     Browsers with a cached file that has expired will attempt to revalidate it
     using the ``If-None-Match`` request header.  This dependency parses that
     header and returns a list of the ETag values that the browser has cached.
-    The hander is responsible for comparing this list to the ETag of the
+    The handler is responsible for comparing this list to the ETag of the
     resource and returning a 304 Not Modified response without the content if
     the file has not been modified.
     """
