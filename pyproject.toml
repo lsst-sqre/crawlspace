@@ -24,6 +24,7 @@ dependencies = [
     "uvicorn[standard]",
 
     # Other dependencies.
+    "pydantic>=2.11",
     "google-cloud-storage",
     "safir[gcs]",
 ]

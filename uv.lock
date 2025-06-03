@@ -232,6 +232,7 @@ source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
     { name = "google-cloud-storage" },
+    { name = "pydantic" },
     { name = "safir", extra = ["gcs"] },
     { name = "starlette" },
     { name = "uvicorn", extra = ["standard"] },
@@ -267,6 +268,7 @@ typing = [
 requires-dist = [
     { name = "fastapi", specifier = "!=0.89.0" },
     { name = "google-cloud-storage" },
+    { name = "pydantic", specifier = ">=2.11" },
     { name = "safir", extras = ["gcs"] },
     { name = "starlette" },
     { name = "uvicorn", extras = ["standard"] },
