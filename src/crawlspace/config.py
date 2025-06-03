@@ -2,80 +2,121 @@
 
 from __future__ import annotations
 
-from typing import Annotated
+from pathlib import Path
+from typing import Annotated, Self
 
-from pydantic import Field
-from pydantic_settings import BaseSettings
+import yaml
+from pydantic import BaseModel, Field, model_validator
 
-__all__ = ["Configuration", "config"]
+__all__ = ["Config"]
 
 
-class Configuration(BaseSettings):
+class Dataset(BaseModel):
+    gcs_bucket: Annotated[str, Field(validation_alias="gcsBucket")]
+    """The GCS bucket name from which to serve files."""
+
+    url_prefix: Annotated[str, Field(validation_alias="urlPrefix")]
+    """The url prefix to access files from this dataset.
+
+    This is appended to the url_prefix from the main config. If the main config
+    url_prefix is /api/hips, and this url_prefix is dp1, then the full url
+    prefix to access files from this dataset is /api/hips/datasets/dp1.
+    """
+
+
+class Config(BaseModel):
     """Configuration for crawlspace."""
 
     cache_max_age: Annotated[
-        int, Field(default=3600, validation_alias="CRAWLSPACE_CACHE_MAX_AGE")
+        int, Field(default=3600, validation_alias="cacheMaxAge")
     ]
     """Length of time in seconds for which browsers should cache results.
 
     The default is one hour.  Set this shorter for testing when the content
     may be changing frequently, and longer for production when serving static
-    data that rarely varies.  Set with the ``CRAWLSPACE_CACHE_MAX_AGE``
-    environment variable.
+    data that rarely varies.
     """
 
-    gcs_project: Annotated[
-        str, Field(default="None", validation_alias="CRAWLSPACE_PROJECT")
-    ]
-    """The GCS project from which to serve files.
-
-    Set with the ``CRAWLSPACE_PROJECT`` environment variable.
-    """
-
-    gcs_bucket: Annotated[
-        str, Field(default="None", validation_alias="CRAWLSPACE_BUCKET")
-    ]
-    """The GCS bucket name from which to serve files.
-
-    Set with the ``CRAWLSPACE_BUCKET`` environment variable.
-    """
+    gcs_project: Annotated[str, Field(validation_alias="gcsProject")]
+    """The GCS project from which to serve files."""
 
     url_prefix: Annotated[
-        str, Field(default="/api/hips", validation_alias="CRAWLSPACE_URL_PREFIX")
+        str,
+        Field(default="/api/hips", validation_alias="urlPrefix"),
     ]
-    """URL prefix for routes.
+    """URL prefix for routes."""
 
-    Set with the ``CRAWLSPACE_URL_PREFIX`` environment variable.
-    """
-
-    name: Annotated[str, Field(default="crawlspace", validation_alias="SAFIR_NAME")]
-    """The application's name, which doubles as the root HTTP endpoint path.
-
-    Set with the ``SAFIR_NAME`` environment variable.
-    """
-
-    profile: Annotated[
-        str, Field(default="production", validation_alias="SAFIR_PROFILE")
+    v2_url_prefix: Annotated[
+        str,
+        Field(default="/api/v2/hips", validation_alias="v2UrlPrefix"),
     ]
-    """Application run profile: "development" or "production".
+    """URL prefix for v2 routes."""
 
-    Set with the ``SAFIR_PROFILE`` environment variable.
+    datasets: Annotated[dict[str, Dataset], Field(validation_alias="datasets")]
+    """Dict of datasets served, name -> Dataset spec."""
+
+    default_dataset_name: Annotated[
+        str, Field(validation_alias="defaultDatasetName")
+    ]
+    """Default data set to serve at the bare <url_prefix> route.
+
+    This must match one of the keys in the dict in the dataset config option.
+
+    Let's say:
+    * url_prefix is set to /api/hips
+    * There are two data sets configured, with url_prefixes dp02 and dp1
+    * default_dataset is set to dp1
+
+    /api/hips/datasets/dp1 will serve dp1
+    /api/hips/datasets/dp02 will serve dp02
+    /api/hips/ will serve dp1
     """
+
+    name: Annotated[str, Field(default="crawlspace")]
+    """The application's name, which doubles as the root HTTP endpoint path."""
+
+    profile: Annotated[str, Field(default="production")]
+    """Application run profile: "development" or "production"."""
 
     logger_name: Annotated[
-        str, Field(default="crawlspace", validation_alias="SAFIR_LOGGER")
+        str, Field(default="crawlspace", validation_alias="loggerName")
     ]
-    """The root name of the application's logger.
+    """The root name of the application's logger."""
 
-    Set with the ``SAFIR_LOGGER`` environment variable.
-    """
+    log_level: Annotated[
+        str, Field(default="INFO", validation_alias="logLevel")
+    ]
+    """The log level of the application's logger."""
 
-    log_level: Annotated[str, Field(default="INFO", validation_alias="SAFIR_LOG_LEVEL")]
-    """The log level of the application's logger.
+    @model_validator(mode="after")
+    def validate_default_dataset_name(self) -> Self:
+        if self.default_dataset_name not in self.datasets.keys():
+            msg = (
+                "default_dataset_name must be a key in the datasets value."
+                f" default_dataset_name: {self.default_dataset_name}, datasets"
+                f" keys: {self.datasets.keys()}"
+            )
+            raise ValueError(msg)
+        return self
 
-    Set with the ``SAFIR_LOG_LEVEL`` environment variable.
-    """
+    @property
+    def default_dataset(self) -> Dataset:
+        """Return the DataSet that matches default_dataset_name."""
+        return self.datasets[self.default_dataset_name]
 
+    @classmethod
+    def from_file(cls, path: Path) -> Self:
+        """Construct a Configuration object from a configuration file.
 
-config = Configuration()
-"""Configuration for crawlspace."""
+        Parameters
+        ----------
+        path
+            Path to the configuration file in YAML.
+
+        Returns
+        -------
+        Config
+            The corresponding `Configuration` object.
+        """
+        with path.open("r") as f:
+            return cls.model_validate(yaml.safe_load(f))

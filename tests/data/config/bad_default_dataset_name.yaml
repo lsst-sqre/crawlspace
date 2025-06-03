@@ -1,0 +1,9 @@
+gcsProject: "someproject"
+datasets:
+  ds1:
+    gcsBucket: "somebucket"
+    urlPrefix: "ds1"
+  ds2:
+    gcsBucket: "someotherbucket"
+    urlPrefix: "ds2"
+defaultDatasetName: nonexistent_dataset

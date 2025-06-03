@@ -10,7 +10,7 @@ import pytest
 from httpx import AsyncClient
 from safir.testing.gcs import MockStorageClient
 
-from crawlspace.config import config
+from crawlspace.dependencies.config import config_dependency
 
 
 @pytest.mark.asyncio
@@ -21,6 +21,7 @@ async def test_get_files(
     for path in root.iterdir():
         if path.is_dir():
             continue
+        config = config_dependency.config()
         r = await client.get(f"{config.url_prefix}/{path.name}")
         assert r.status_code == 200
         expected_cache = f"private, max-age={config.cache_max_age}"
@@ -61,6 +62,7 @@ async def test_get_root(
 ) -> None:
     index = Path(__file__).parent.parent / "files" / "index.html"
 
+    config = config_dependency.config()
     r = await client.get(config.url_prefix)
     assert r.status_code == 307
     assert r.headers["Location"] == f"https://example.com{config.url_prefix}/"
@@ -81,6 +83,7 @@ async def test_head(client: AsyncClient, mock_gcs: MockStorageClient) -> None:
     for path in root.iterdir():
         if path.is_dir():
             continue
+        config = config_dependency.config()
         r = await client.head(f"{config.url_prefix}/{path.name}")
         assert r.status_code == 200
         expected_cache = f"private, max-age={config.cache_max_age}"
@@ -129,9 +132,11 @@ async def test_head(client: AsyncClient, mock_gcs: MockStorageClient) -> None:
 async def test_errors(
     client: AsyncClient, mock_gcs: MockStorageClient
 ) -> None:
+    config = config_dependency.config()
     r = await client.get(f"{config.url_prefix}/missing")
     assert r.status_code == 404
 
+    config = config_dependency.config()
     for invalid_url in (
         "%2E%2E/%2E%2E/etc/passwd",
         "Norder4/",
@@ -151,6 +156,7 @@ async def test_cache_validation(
 ) -> None:
     index = Path(__file__).parent.parent / "files" / "index.html"
 
+    config = config_dependency.config()
     r = await client.get(f"{config.url_prefix}/")
     assert r.status_code == 200
     etag = r.headers["Etag"]
@@ -196,6 +202,7 @@ async def test_cache_validation(
 async def test_slash_redirect(
     client: AsyncClient, mock_gcs: MockStorageClient
 ) -> None:
+    config = config_dependency.config()
     bad_url = f"{config.url_prefix}//Norder4/Dir0/Npix1794.png"
     good_url = f"{config.url_prefix}/Norder4/Dir0/Npix1794.png"
     r = await client.get(bad_url)

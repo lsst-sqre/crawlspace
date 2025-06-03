@@ -6,7 +6,7 @@ from contextvars import ContextVar
 
 from google.cloud import storage
 
-from ..config import config
+from ..dependencies.config import config_dependency
 
 _GCS_CLIENT: ContextVar[storage.Client] = ContextVar("_GCS_CLIENT")
 
@@ -21,6 +21,7 @@ class GCSClientDependency:
 
     async def __call__(self) -> storage.client.Client:
         """Return the cached `google.cloud.storage.Client`."""
+        config = config_dependency.config()
         return storage.Client(project=config.gcs_project)
 
 

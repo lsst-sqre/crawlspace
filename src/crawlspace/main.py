@@ -13,32 +13,35 @@ from fastapi import FastAPI
 from safir.logging import configure_logging
 from safir.middleware.x_forwarded import XForwardedMiddleware
 
-from .config import config
+from .dependencies.config import config_dependency
 from .handlers.external import external_router
 from .handlers.internal import internal_router
 
-__all__ = ["app", "config"]
+__all__ = ["create_app"]
 
 
-configure_logging(
-    profile=config.profile,
-    log_level=config.log_level,
-    name=config.logger_name,
-)
+def create_app() -> FastAPI:
+    """The main FastAPI application for crawlspace."""
+    config = config_dependency.config()
+    configure_logging(
+        profile=config.profile,
+        log_level=config.log_level,
+        name=config.logger_name,
+    )
 
-app = FastAPI(
-    title="crawlspace",
-    description=metadata("crawlspace")["Summary"],
-    version=version("crawlspace"),
-    openapi_url=f"{config.url_prefix}/openapi.json",
-    docs_url=f"{config.url_prefix}/docs",
-    redoc_url=f"{config.url_prefix}/redoc",
-)
-"""The main FastAPI application for crawlspace."""
+    app = FastAPI(
+        title="crawlspace",
+        description=metadata("crawlspace")["Summary"],
+        version=version("crawlspace"),
+        openapi_url=f"{config.url_prefix}/openapi.json",
+        docs_url=f"{config.url_prefix}/docs",
+        redoc_url=f"{config.url_prefix}/redoc",
+    )
+    # Attach the routers.
+    app.include_router(internal_router)
+    app.include_router(external_router, prefix=config.url_prefix)
 
-# Attach the routers.
-app.include_router(internal_router)
-app.include_router(external_router, prefix=config.url_prefix)
+    # Add the middleware
+    app.add_middleware(XForwardedMiddleware)
 
-# Add the middleware
-app.add_middleware(XForwardedMiddleware)
+    return app

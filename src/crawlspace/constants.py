@@ -2,6 +2,16 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
+__all__ = ["CONFIG_PATH", "PATH_REGEX", "CONFIG_PATH_ENV_VAR"]
+
+CONFIG_PATH = Path("/etc/crawlspace/config.yaml")
+"""Default path to configuration."""
+
+CONFIG_PATH_ENV_VAR = "CRAWLSPACE_CONFIG_PATH"
+"""Env var to load config path from."""
+
 PATH_REGEX = r"^(/*([^/.]+/+)*[^/.]+(\.[^/.]+)?|/+)?$"
 """Regex matching a valid path.
 

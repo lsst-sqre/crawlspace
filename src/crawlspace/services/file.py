@@ -9,7 +9,7 @@ from mimetypes import guess_type
 
 from google.cloud import storage
 
-from ..config import config
+from ..dependencies.config import config_dependency
 from ..exceptions import GCSFileNotFoundError
 
 
@@ -37,6 +37,7 @@ class CrawlspaceFile:
         blob
             Underlying Google Cloud Storage blob.
         """
+        config = config_dependency.config()
         headers = {
             "Cache-Control": f"private, max-age={config.cache_max_age}",
             "Content-Length": str(blob.size),
@@ -75,8 +76,9 @@ class FileService:
         metadata.
     """
 
-    def __init__(self, gcs: storage.Client) -> None:
+    def __init__(self, gcs: storage.Client, bucket: str) -> None:
         self._gcs = gcs
+        self._bucket = bucket
 
     def get_file(self, path: str) -> CrawlspaceFile:
         """Retrieve a file from Google Cloud Storage.
@@ -94,7 +96,7 @@ class FileService:
         crawlspace.exceptions.GCSFileNotFoundError
             The path was not found in the configured GCS bucket.
         """
-        bucket = self._gcs.bucket(config.gcs_bucket)
+        bucket = self._gcs.bucket(self._bucket)
         blob = bucket.blob(path)
         if not blob.exists():
             raise GCSFileNotFoundError(path)

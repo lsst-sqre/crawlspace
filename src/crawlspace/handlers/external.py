@@ -9,6 +9,7 @@ from safir.dependencies.logger import logger_dependency
 from structlog.stdlib import BoundLogger
 
 from ..constants import PATH_REGEX
+from ..dependencies.config import config_dependency
 from ..dependencies.etag import etag_validation_dependency
 from ..dependencies.gcs import gcs_client_dependency
 from ..exceptions import GCSFileNotFoundError
@@ -54,7 +55,8 @@ def get_file(
     if path == "":
         path = "index.html"
 
-    file_service = FileService(gcs)
+    config = config_dependency.config()
+    file_service = FileService(gcs, config.default_dataset.gcs_bucket)
     try:
         crawlspace_file = file_service.get_file(path)
     except GCSFileNotFoundError:
@@ -113,7 +115,8 @@ def head_file(
     if path == "":
         path = "index.html"
 
-    file_service = FileService(gcs)
+    config = config_dependency.config()
+    file_service = FileService(gcs, config.default_dataset.gcs_bucket)
     try:
         crawlspace_file = file_service.get_file(path)
     except GCSFileNotFoundError:

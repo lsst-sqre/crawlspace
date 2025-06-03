@@ -13,6 +13,8 @@ from httpx import ASGITransport, AsyncClient
 from safir.testing.gcs import MockStorageClient, patch_google_storage
 
 from crawlspace import main
+from crawlspace.dependencies.config import config_dependency
+from tests.constants import TEST_DATA_DIR
 
 
 @pytest_asyncio.fixture
@@ -22,8 +24,11 @@ async def app() -> AsyncIterator[FastAPI]:
     Wraps the application in a lifespan manager so that startup and shutdown
     events are sent during test execution.
     """
-    async with LifespanManager(main.app):
-        yield main.app
+    config_path = TEST_DATA_DIR / "config" / "base.yaml"
+    config_dependency.set_config_path(config_path)
+    app = main.create_app()
+    async with LifespanManager(app):
+        yield app
 
 
 @pytest_asyncio.fixture
