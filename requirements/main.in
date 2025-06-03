@@ -12,6 +12,8 @@ uvicorn[standard]
 
 # Other dependencies.
 google-cloud-storage
+pydantic>=2.11.5
+pydantic-settings>=2.9.1
 safir[gcs]
 
 # Uncomment this, change the branch, comment out safir above, and run make
