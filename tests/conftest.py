@@ -14,7 +14,9 @@ from safir.testing.gcs import MockStorageClient, patch_google_storage
 
 from crawlspace import main
 from crawlspace.dependencies.config import config_dependency
-from tests.constants import TEST_DATA_DIR
+
+from .constants import TEST_DATA_DIR
+from .support import FixtureParameter, patch_google_storage_cm
 
 
 @pytest_asyncio.fixture
@@ -43,3 +45,33 @@ async def client(app: FastAPI) -> AsyncIterator[AsyncClient]:
 @pytest.fixture
 def mock_gcs() -> Iterator[MockStorageClient]:
     yield from patch_google_storage(path=Path(__file__).parent / "files")
+
+
+fixture_parameters = [
+    FixtureParameter(version="v1"),
+    FixtureParameter(version="v2", dataset="ds1"),
+    FixtureParameter(version="v2", dataset="ds2"),
+]
+
+
+@pytest.fixture(
+    params=fixture_parameters, ids=[f.fixture_id for f in fixture_parameters]
+)
+def url_prefix(request: pytest.FixtureRequest) -> Iterator[str]:
+    """URL prefixes with GCP mocked for the expected bucket for each."""
+    config = config_dependency.config()
+    match request.param.version:
+        case "v1":
+            bucket = config.default_dataset.gcs_bucket
+            url_prefix = config.url_prefix
+        case "v2":
+            dataset = request.param.dataset
+            bucket = config.datasets[dataset].gcs_bucket
+            url_prefix = f"{config.v2_url_prefix}/{dataset}"
+        case _:
+            raise RuntimeError("Unknown parameter class")
+
+    with patch_google_storage_cm(
+        path=Path(__file__).parent / "files", bucket_name=bucket
+    ):
+        yield url_prefix

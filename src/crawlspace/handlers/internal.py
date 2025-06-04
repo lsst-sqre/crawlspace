@@ -1,8 +1,9 @@
 """Internal HTTP handlers that serve relative to the root path, ``/``.
 
-These handlers aren't externally visible since the app is available at a path,
-``/crawlspace``. See `crawlspace.handlers.external` for
-the external endpoint handlers.
+These handlers aren't externally visible since the app is
+available at a path, ``/crawlspace``. See
+`crawlspace.handlers.v1` and `crawlspace.handlers.v2 for the
+external endpoint handlers.
 
 These handlers should be used for monitoring, health checks, internal status,
 or other information that should not be visible outside the Kubernetes cluster.

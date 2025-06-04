@@ -1,10 +1,12 @@
+"""Tests for app config."""
+
 import pytest
 
 from crawlspace.config import Config
 from tests.constants import TEST_DATA_DIR
 
 
-def test_default_dataset_property_with_valid_config():
+def test_default_dataset_property_with_valid_config() -> None:
     config_path = TEST_DATA_DIR / "config" / "base.yaml"
     config = Config.from_file(config_path)
 
@@ -12,7 +14,7 @@ def test_default_dataset_property_with_valid_config():
     assert config.default_dataset == config.datasets["ds1"]
 
 
-def test_default_dataset_property_with_invalid_config():
+def test_default_dataset_property_with_invalid_config() -> None:
     config_path = TEST_DATA_DIR / "config" / "bad_default_dataset_name.yaml"
 
     with pytest.raises(ValueError) as exc_info:
@@ -22,4 +24,3 @@ def test_default_dataset_property_with_invalid_config():
     assert "nonexistent_dataset" in error_message
     assert "ds1" in error_message
     assert "ds2" in error_message
-

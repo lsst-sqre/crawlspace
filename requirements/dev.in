@@ -16,3 +16,4 @@ pytest
 pytest-asyncio
 pytest-cov
 pytest-sugar
+types-PyYAML

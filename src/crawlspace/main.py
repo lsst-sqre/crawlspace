@@ -14,8 +14,9 @@ from safir.logging import configure_logging
 from safir.middleware.x_forwarded import XForwardedMiddleware
 
 from .dependencies.config import config_dependency
-from .handlers.external import external_router
 from .handlers.internal import internal_router
+from .handlers.v1 import v1_router
+from .handlers.v2 import v2_router
 
 __all__ = ["create_app"]
 
@@ -39,7 +40,8 @@ def create_app() -> FastAPI:
     )
     # Attach the routers.
     app.include_router(internal_router)
-    app.include_router(external_router, prefix=config.url_prefix)
+    app.include_router(v2_router, prefix=f"{config.v2_url_prefix}")
+    app.include_router(v1_router, prefix=config.url_prefix)
 
     # Add the middleware
     app.add_middleware(XForwardedMiddleware)

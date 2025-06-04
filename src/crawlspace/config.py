@@ -8,7 +8,7 @@ from typing import Annotated, Self
 import yaml
 from pydantic import BaseModel, Field, model_validator
 
-__all__ = ["Config"]
+__all__ = ["Config", "Dataset"]
 
 
 class Dataset(BaseModel):
@@ -103,6 +103,11 @@ class Config(BaseModel):
     def default_dataset(self) -> Dataset:
         """Return the DataSet that matches default_dataset_name."""
         return self.datasets[self.default_dataset_name]
+
+    @property
+    def v2_url_prefix(self) -> str:
+        """Return the url prefix for the v2 API."""
+        return f"{self.url_prefix}/v2"
 
     @classmethod
     def from_file(cls, path: Path) -> Self:
