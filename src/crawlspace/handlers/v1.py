@@ -1,4 +1,4 @@
-"""Handlers for the app's external root, ``/crawlspace/``."""
+"""Handlers for the app's v1 API root."""
 
 import re
 from typing import Annotated
@@ -9,26 +9,26 @@ from google.cloud import storage
 from safir.dependencies.logger import logger_dependency
 from structlog.stdlib import BoundLogger
 
+from ..config import Dataset
 from ..constants import PATH_REGEX
+from ..dependencies.config import config_dependency
 from ..dependencies.etag import etag_validation_dependency
 from ..dependencies.gcs import gcs_client_dependency
 from ..exceptions import GCSFileNotFoundError
 from ..services.file import FileService
 
-external_router = APIRouter()
-"""FastAPI router for all external handlers."""
+v1_router = APIRouter()
+"""FastAPI router for v1 API handlers."""
 
-__all__ = ["external_router", "get_file", "get_root", "head_file"]
+__all__ = ["get_file", "get_root", "head_file", "v1_router"]
 
 
-@external_router.get(
-    "", response_class=RedirectResponse, summary="Retrieve root"
-)
+@v1_router.get("", response_class=RedirectResponse, summary="Retrieve root")
 def get_root(request: Request) -> str:
     return str(request.url_for("get_file", path=""))
 
 
-@external_router.get(
+@v1_router.get(
     "/{path:path}",
     description=(
         "Retrieve a file from the underlying Google Cloud Storage bucket."
@@ -41,6 +41,7 @@ def get_file(
     gcs: Annotated[storage.Client, Depends(gcs_client_dependency)],
     etags: Annotated[list[str], Depends(etag_validation_dependency)],
     logger: Annotated[BoundLogger, Depends(logger_dependency)],
+    dataset: Dataset | None = None,
 ) -> Response:
     logger.debug("File request", path=path)
 
@@ -55,7 +56,9 @@ def get_file(
     if path == "":
         path = "index.html"
 
-    file_service = FileService(gcs)
+    config = config_dependency.config()
+    dataset = dataset or config.default_dataset
+    file_service = FileService(gcs, dataset.gcs_bucket)
     try:
         crawlspace_file = file_service.get_file(path)
     except GCSFileNotFoundError as e:
@@ -87,7 +90,7 @@ def get_file(
         )
 
 
-@external_router.head(
+@v1_router.head(
     "/{path:path}",
     description=(
         "Retrieve metadata for a file from the underlying Google Cloud"
@@ -100,6 +103,7 @@ def head_file(
     path: Annotated[str, Path(..., title="File path", pattern=PATH_REGEX)],
     gcs: Annotated[storage.Client, Depends(gcs_client_dependency)],
     logger: Annotated[BoundLogger, Depends(logger_dependency)],
+    dataset: Dataset | None = None,
 ) -> Response:
     logger.debug("Head request", path=path)
 
@@ -114,7 +118,9 @@ def head_file(
     if path == "":
         path = "index.html"
 
-    file_service = FileService(gcs)
+    config = config_dependency.config()
+    dataset = dataset or config.default_dataset
+    file_service = FileService(gcs, dataset.gcs_bucket)
     try:
         crawlspace_file = file_service.get_file(path)
     except GCSFileNotFoundError as e:

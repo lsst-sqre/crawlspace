@@ -4,4 +4,4 @@ datasets:
     gcsBucket: "somebucket"
   ds2:
     gcsBucket: "someotherbucket"
-defaultDatasetName: ds1
+defaultDatasetName: nonexistent_dataset
