@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from email.utils import format_datetime
 from pathlib import Path
 
@@ -26,8 +26,8 @@ async def test_get_files(
         expected_cache = f"private, max-age={config.cache_max_age}"
         assert r.headers["Cache-Control"] == expected_cache
         assert r.headers["Content-Length"] == str(path.stat().st_size)
-        assert r.headers["Etag"] == f'"{str(path.stat().st_ino)}"'
-        mod = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
+        assert r.headers["Etag"] == f'"{path.stat().st_ino!s}"'
+        mod = datetime.fromtimestamp(path.stat().st_mtime, tz=UTC)
         assert r.headers["Last-Modified"] == format_datetime(mod, usegmt=True)
 
         if path.suffix == ".fits":
@@ -49,8 +49,8 @@ async def test_get_files(
     path = root / "Norder4" / "Dir0" / "Npix1794.png"
     assert r.headers["Content-Length"] == str(path.stat().st_size)
     assert r.headers["Content-Type"] == "image/png"
-    assert r.headers["Etag"] == f'"{str(path.stat().st_ino)}"'
-    mod = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
+    assert r.headers["Etag"] == f'"{path.stat().st_ino!s}"'
+    mod = datetime.fromtimestamp(path.stat().st_mtime, tz=UTC)
     assert r.headers["Last-Modified"] == format_datetime(mod, usegmt=True)
     assert r.read() == path.read_bytes()
 
@@ -69,8 +69,8 @@ async def test_get_root(
     assert r.status_code == 200
     assert r.headers["Content-Length"] == str(index.stat().st_size)
     assert r.headers["Content-Type"] == "text/html; charset=utf-8"
-    assert r.headers["Etag"] == f'"{str(index.stat().st_ino)}"'
-    mod = datetime.fromtimestamp(index.stat().st_mtime, tz=timezone.utc)
+    assert r.headers["Etag"] == f'"{index.stat().st_ino!s}"'
+    mod = datetime.fromtimestamp(index.stat().st_mtime, tz=UTC)
     assert r.headers["Last-Modified"] == format_datetime(mod, usegmt=True)
     assert r.read() == index.read_bytes()
 
@@ -86,8 +86,8 @@ async def test_head(client: AsyncClient, mock_gcs: MockStorageClient) -> None:
         expected_cache = f"private, max-age={config.cache_max_age}"
         assert r.headers["Cache-Control"] == expected_cache
         assert r.headers["Content-Length"] == str(path.stat().st_size)
-        assert r.headers["Etag"] == f'"{str(path.stat().st_ino)}"'
-        mod = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
+        assert r.headers["Etag"] == f'"{path.stat().st_ino!s}"'
+        mod = datetime.fromtimestamp(path.stat().st_mtime, tz=UTC)
         assert r.headers["Last-Modified"] == format_datetime(mod, usegmt=True)
 
         if path.suffix == ".fits":
@@ -109,8 +109,8 @@ async def test_head(client: AsyncClient, mock_gcs: MockStorageClient) -> None:
     path = root / "Norder4" / "Dir0" / "Npix1794.png"
     assert r.headers["Content-Length"] == str(path.stat().st_size)
     assert r.headers["Content-Type"] == "image/png"
-    assert r.headers["Etag"] == f'"{str(path.stat().st_ino)}"'
-    mod = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
+    assert r.headers["Etag"] == f'"{path.stat().st_ino!s}"'
+    mod = datetime.fromtimestamp(path.stat().st_mtime, tz=UTC)
     assert r.headers["Last-Modified"] == format_datetime(mod, usegmt=True)
     assert r.read() == b""
 
@@ -119,8 +119,8 @@ async def test_head(client: AsyncClient, mock_gcs: MockStorageClient) -> None:
     assert r.status_code == 200
     assert r.headers["Content-Length"] == str(path.stat().st_size)
     assert r.headers["Content-Type"] == "text/html; charset=utf-8"
-    assert r.headers["Etag"] == f'"{str(path.stat().st_ino)}"'
-    mod = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
+    assert r.headers["Etag"] == f'"{path.stat().st_ino!s}"'
+    mod = datetime.fromtimestamp(path.stat().st_mtime, tz=UTC)
     assert r.headers["Last-Modified"] == format_datetime(mod, usegmt=True)
     assert r.read() == b""
 
@@ -154,7 +154,7 @@ async def test_cache_validation(
     r = await client.get(f"{config.url_prefix}/")
     assert r.status_code == 200
     etag = r.headers["Etag"]
-    assert etag == f'"{str(index.stat().st_ino)}"'
+    assert etag == f'"{index.stat().st_ino!s}"'
 
     for header in (
         etag,
@@ -170,7 +170,7 @@ async def test_cache_validation(
         assert "Content-Length" not in r.headers
         assert r.headers["Content-Type"] == "text/html; charset=utf-8"
         assert r.headers["Etag"] == etag
-        mod = datetime.fromtimestamp(index.stat().st_mtime, tz=timezone.utc)
+        mod = datetime.fromtimestamp(index.stat().st_mtime, tz=UTC)
         assert r.headers["Last-Modified"] == format_datetime(mod, usegmt=True)
         assert r.read() == b""
 
@@ -187,7 +187,7 @@ async def test_cache_validation(
         assert r.headers["Content-Length"] == str(index.stat().st_size)
         assert r.headers["Content-Type"] == "text/html; charset=utf-8"
         assert r.headers["Etag"] == etag
-        mod = datetime.fromtimestamp(index.stat().st_mtime, tz=timezone.utc)
+        mod = datetime.fromtimestamp(index.stat().st_mtime, tz=UTC)
         assert r.headers["Last-Modified"] == format_datetime(mod, usegmt=True)
         assert r.read() == index.read_bytes()
 
