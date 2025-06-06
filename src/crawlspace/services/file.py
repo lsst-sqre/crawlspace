@@ -76,8 +76,9 @@ class FileService:
         metadata.
     """
 
-    def __init__(self, gcs: storage.Client) -> None:
+    def __init__(self, gcs: storage.Client, bucket: str) -> None:
         self._gcs = gcs
+        self._bucket = bucket
 
     def get_file(self, path: str) -> CrawlspaceFile:
         """Retrieve a file from Google Cloud Storage.
@@ -95,8 +96,7 @@ class FileService:
         crawlspace.exceptions.GCSFileNotFoundError
             The path was not found in the configured GCS bucket.
         """
-        config = config_dependency.config()
-        bucket = self._gcs.bucket(config.gcs_bucket)
+        bucket = self._gcs.bucket(self._bucket)
         blob = bucket.blob(path)
         if not blob.exists():
             raise GCSFileNotFoundError(path)
