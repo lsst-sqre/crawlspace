@@ -67,4 +67,4 @@ EXPOSE 8080
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Run the application.
-CMD ["uvicorn", "crawlspace.main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uvicorn", "--factory", "crawlspace.main:create_app", "--host", "0.0.0.0", "--port", "8080"]
