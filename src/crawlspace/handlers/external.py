@@ -1,6 +1,7 @@
 """Handlers for the app's external root, ``/crawlspace/``."""
 
 import re
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Request, Response
 from fastapi.responses import RedirectResponse
@@ -36,10 +37,10 @@ def get_root(request: Request) -> str:
 )
 def get_file(
     request: Request,
-    path: str = Path(..., title="File path", pattern=PATH_REGEX),
-    gcs: storage.Client = Depends(gcs_client_dependency),
-    etags: list[str] = Depends(etag_validation_dependency),
-    logger: BoundLogger = Depends(logger_dependency),
+    path: Annotated[str, Path(..., title="File path", pattern=PATH_REGEX)],
+    gcs: Annotated[storage.Client, Depends(gcs_client_dependency)],
+    etags: Annotated[list[str], Depends(etag_validation_dependency)],
+    logger: Annotated[BoundLogger, Depends(logger_dependency)],
 ) -> Response:
     logger.debug("File request", path=path)
 
@@ -57,14 +58,14 @@ def get_file(
     file_service = FileService(gcs)
     try:
         crawlspace_file = file_service.get_file(path)
-    except GCSFileNotFoundError:
+    except GCSFileNotFoundError as e:
         logger.debug("File not found", path=path)
-        raise HTTPException(status_code=404, detail="File not found")
+        raise HTTPException(status_code=404, detail="File not found") from e
     except Exception as e:
         logger.exception(f"Failed to retrieve {path}", error=str(e))
         raise HTTPException(
             status_code=500, detail="Failed to retrieve file from GCS"
-        )
+        ) from e
 
     if crawlspace_file.blob.etag in etags:
         logger.debug("File unchanged", path=path)
@@ -96,9 +97,9 @@ def get_file(
 )
 def head_file(
     request: Request,
-    path: str = Path(..., title="File path", pattern=PATH_REGEX),
-    gcs: storage.Client = Depends(gcs_client_dependency),
-    logger: BoundLogger = Depends(logger_dependency),
+    path: Annotated[str, Path(..., title="File path", pattern=PATH_REGEX)],
+    gcs: Annotated[storage.Client, Depends(gcs_client_dependency)],
+    logger: Annotated[BoundLogger, Depends(logger_dependency)],
 ) -> Response:
     logger.debug("Head request", path=path)
 
@@ -116,14 +117,14 @@ def head_file(
     file_service = FileService(gcs)
     try:
         crawlspace_file = file_service.get_file(path)
-    except GCSFileNotFoundError:
+    except GCSFileNotFoundError as e:
         logger.debug("File not found for head request", path=path)
-        raise HTTPException(status_code=404, detail="File not found")
+        raise HTTPException(status_code=404, detail="File not found") from e
     except Exception as e:
         logger.exception(f"Failed to retrieve {path}", error=str(e))
         raise HTTPException(
             status_code=500, detail="Failed to retrieve file from GCS"
-        )
+        ) from e
 
     logger.debug("Returning file metadata", path=path)
     return Response(
