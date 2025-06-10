@@ -9,7 +9,7 @@ from crawlspace.dependencies.config import config_dependency
 
 
 @pytest.mark.asyncio
-async def test_no_dataset_in_path(client: AsyncClient) -> None:
+async def test_no_release_in_path(client: AsyncClient) -> None:
     config = config_dependency.config()
     r = await client.get(f"{config.v2_url_prefix}/")
     assert r.status_code == 400
@@ -20,10 +20,10 @@ async def test_no_dataset_in_path(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_dataset_not_found(client: AsyncClient) -> None:
+async def test_release_not_found(client: AsyncClient) -> None:
     config = config_dependency.config()
     r = await client.get(f"{config.v2_url_prefix}/nope")
     assert r.status_code == 404
-    assert "Available datasets:" in r.text
+    assert "Available releases:" in r.text
     assert "ds1" in r.text
     assert "ds2" in r.text

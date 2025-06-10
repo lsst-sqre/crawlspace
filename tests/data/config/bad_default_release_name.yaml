@@ -1,7 +1,7 @@
 gcsProject: "someproject"
-datasets:
+releases:
   ds1:
     gcsBucket: "somebucket"
   ds2:
     gcsBucket: "someotherbucket"
-defaultDatasetName: nonexistent_dataset
+defaultReleaseName: nonexistent_release

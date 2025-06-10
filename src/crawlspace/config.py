@@ -8,11 +8,11 @@ from typing import Annotated, Self
 import yaml
 from pydantic import BaseModel, Field, model_validator
 
-__all__ = ["Config", "Dataset"]
+__all__ = ["Config", "Release"]
 
 
-class Dataset(BaseModel):
-    """Where to find files for a dataset in GCS."""
+class Release(BaseModel):
+    """Where to find files for a release in GCS."""
 
     gcs_bucket: Annotated[
         str, Field(default="None", validation_alias="gcsBucket")
@@ -39,13 +39,13 @@ class Config(BaseModel):
     data that rarely varies.
     """
 
-    datasets: dict[str, Dataset]
-    """A mapping of dataset names to GCS location info."""
+    releases: dict[str, Release]
+    """A mapping of release names to GCS location info."""
 
-    default_dataset_name: Annotated[
-        str, Field(validation_alias="defaultDatasetName")
+    default_release_name: Annotated[
+        str, Field(validation_alias="defaultReleaseName")
     ]
-    """The dataset to serve from v1 routes. Must be a key in datasets."""
+    """The release to serve from v1 routes. Must be a key in releases."""
 
     url_prefix: Annotated[
         str, Field(default="/api/hips", validation_alias="urlPrefix")
@@ -76,17 +76,17 @@ class Config(BaseModel):
     """The log level of the application's logger."""
 
     @property
-    def default_dataset(self) -> Dataset:
-        """Return the DataSet that matches default_dataset_name."""
-        return self.datasets[self.default_dataset_name]
+    def default_release(self) -> Release:
+        """Return the Relesae that matches default_release_name."""
+        return self.releases[self.default_release_name]
 
     @model_validator(mode="after")
-    def validate_default_dataset_name(self) -> Self:
-        if self.default_dataset_name not in self.datasets:
+    def validate_default_release_name(self) -> Self:
+        if self.default_release_name not in self.releases:
             msg = (
-                "default_dataset_name must be a key in the datasets value."
-                f" default_dataset_name: {self.default_dataset_name}, datasets"
-                f" keys: {self.datasets.keys()}"
+                "default_release_name must be a key in the releases value."
+                f" default_release_name: {self.default_release_name}, releases"
+                f" keys: {self.releases.keys()}"
             )
             raise ValueError(msg)
         return self

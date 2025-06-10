@@ -49,8 +49,8 @@ def mock_gcs() -> Iterator[MockStorageClient]:
 
 fixture_parameters = [
     FixtureParameter(version="v1"),
-    FixtureParameter(version="v2", dataset="ds1"),
-    FixtureParameter(version="v2", dataset="ds2"),
+    FixtureParameter(version="v2", release="ds1"),
+    FixtureParameter(version="v2", release="ds2"),
 ]
 
 
@@ -62,12 +62,12 @@ def url_prefix(request: pytest.FixtureRequest) -> Iterator[str]:
     config = config_dependency.config()
     match request.param.version:
         case "v1":
-            bucket = config.default_dataset.gcs_bucket
+            bucket = config.default_release.gcs_bucket
             url_prefix = config.url_prefix
         case "v2":
-            dataset = request.param.dataset
-            bucket = config.datasets[dataset].gcs_bucket
-            url_prefix = f"{config.v2_url_prefix}/{dataset}"
+            release = request.param.release
+            bucket = config.releases[release].gcs_bucket
+            url_prefix = f"{config.v2_url_prefix}/{release}"
         case _:
             raise RuntimeError("Unknown parameter class")
 

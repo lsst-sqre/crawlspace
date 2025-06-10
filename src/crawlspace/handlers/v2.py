@@ -8,7 +8,7 @@ from google.cloud import storage
 from safir.dependencies.logger import logger_dependency
 from structlog.stdlib import BoundLogger
 
-from ..config import Dataset
+from ..config import Release
 from ..constants import PATH_REGEX
 from ..dependencies.config import config_dependency
 from ..dependencies.etag import etag_validation_dependency
@@ -22,22 +22,22 @@ v2_router = APIRouter()
 """FastAPI router for v2 API handlers."""
 
 
-def _get_dataset(dataset_name: str) -> Dataset:
-    """Get info about a dataset or raise a 404 if no such dataset exists.
+def _get_release(release_name: str) -> Release:
+    """Get info about a release or raise a 404 if no such release exists.
 
     Parameters
     ----------
-    dataset_name
-        The name of the dataset to retrieve info about.
+    release_name
+        The name of the release to retrieve info about.
 
     """
     config = config_dependency.config()
     try:
-        return config.datasets[dataset_name]
+        return config.releases[release_name]
     except KeyError:
         msg = (
-            f"Dataset {dataset_name} not found. Available datasets:"
-            f" {config.datasets.keys()}"
+            f"Release {release_name} not found. Available releases:"
+            f" {config.releases.keys()}"
         )
         raise HTTPException(status_code=404, detail=msg) from None
 
@@ -48,21 +48,21 @@ def _get_dataset(dataset_name: str) -> Dataset:
 @v2_router.get(
     "",
     summary=(
-        "This will always error. A dataset name must be specified as"
+        "This will always error. A release name must be specified as"
         " the first path component."
     ),
 )
 @v2_router.get(
     "/",
     summary=(
-        "This will always error. A dataset name must be specified as"
+        "This will always error. A release name must be specified as"
         " the first path component."
     ),
 )
 def get_root(request: Request) -> Response:
-    """Raise an informative error for any path without a dataset component."""
+    """Raise an informative error for any path without a release component."""
     msg = (
-        f"You must specify the dataset name as the first path"
+        f"You must specify the release name as the first path"
         f" component after {v2_router.prefix}.",
     )
     raise HTTPException(
@@ -72,24 +72,24 @@ def get_root(request: Request) -> Response:
 
 
 @v2_router.get(
-    "/{dataset_name}",
+    "/{release_name}",
     response_class=RedirectResponse,
-    summary="Retrieve root for the given dataset",
+    summary="Retrieve root for the given release",
 )
-def get_dataset_root(
+def get_release_root(
     request: Request,
-    dataset_name: Annotated[str, Path(..., title="Dataset name")],
+    release_name: Annotated[str, Path(..., title="Release name")],
 ) -> str:
     """Redirect to the get_file endpoint with a blank path."""
-    _ = _get_dataset(dataset_name)
-    return str(request.url_for("get_file", dataset_name=dataset_name, path=""))
+    _ = _get_release(release_name)
+    return str(request.url_for("get_file", release_name=release_name, path=""))
 
 
 @v2_router.get(
-    "/{dataset_name}/{path:path}",
+    "/{release_name}/{path:path}",
     description=(
         "Retrieve a file from the underlying Google Cloud Storage bucket for"
-        " the given dataset."
+        " the given release."
     ),
     summary="Retrieve a file",
 )
@@ -99,25 +99,25 @@ def get_file(
     gcs: Annotated[storage.Client, Depends(gcs_client_dependency)],
     etags: Annotated[list[str], Depends(etag_validation_dependency)],
     logger: Annotated[BoundLogger, Depends(logger_dependency)],
-    dataset_name: Annotated[str, Path(title="Dataset name")],
+    release_name: Annotated[str, Path(title="Release name")],
 ) -> Response:
-    """Get the dataset info and pass it to the v1 get_file handler."""
-    dataset = _get_dataset(dataset_name)
+    """Get the release info and pass it to the v1 get_file handler."""
+    release = _get_release(release_name)
     return v1_get_file(
         request=request,
         path=path,
         gcs=gcs,
         etags=etags,
         logger=logger,
-        dataset=dataset,
+        release=release,
     )
 
 
 @v2_router.head(
-    "/{dataset_name}/{path:path}",
+    "/{release_name}/{path:path}",
     description=(
         "Retrieve metadata for a file from the underlying Google Cloud"
-        " Storage bucket for the given dataset."
+        " Storage bucket for the given release."
     ),
     summary="Metadata for a file",
 )
@@ -126,10 +126,10 @@ def head_file(
     path: Annotated[str, Path(..., title="File path", pattern=PATH_REGEX)],
     gcs: Annotated[storage.Client, Depends(gcs_client_dependency)],
     logger: Annotated[BoundLogger, Depends(logger_dependency)],
-    dataset_name: Annotated[str, Path(title="Dataset name")],
+    release_name: Annotated[str, Path(title="Release name")],
 ) -> Response:
-    """Get the dataset info and pass it to the v1 head_file handler."""
-    dataset = _get_dataset(dataset_name)
+    """Get the release info and pass it to the v1 head_file handler."""
+    release = _get_release(release_name)
     return v1_head_file(
-        request=request, path=path, gcs=gcs, logger=logger, dataset=dataset
+        request=request, path=path, gcs=gcs, logger=logger, release=release
     )
