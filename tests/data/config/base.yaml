@@ -1,7 +1,5 @@
 gcsProject: "someproject"
-datasets:
-  ds1:
-    gcsBucket: "somebucket"
-  ds2:
-    gcsBucket: "someotherbucket"
-defaultDatasetName: ds1
+buckets:
+  ds1: "somebucket"
+  ds2: "someotherbucket"
+defaultBucket: "somebucket"

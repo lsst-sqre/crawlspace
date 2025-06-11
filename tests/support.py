@@ -16,13 +16,13 @@ __all__ = ["FixtureParameter", "patch_google_storage_cm"]
 @dataclass
 class FixtureParameter:
     version: Literal["v1", "v2"]
-    dataset: str | None = None
+    bucket_key: str | None = None
 
     @property
     def fixture_id(self) -> str:
         id = str(self.version)
-        if self.dataset:
-            id += f":{self.dataset}"
+        if self.bucket_key:
+            id += f":{self.bucket_key}"
         return id
 
 
