@@ -6,18 +6,9 @@ from pathlib import Path
 from typing import Annotated, Self
 
 import yaml
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field
 
-__all__ = ["Config", "Dataset"]
-
-
-class Dataset(BaseModel):
-    """Where to find files for a dataset in GCS."""
-
-    gcs_bucket: Annotated[
-        str, Field(default="None", validation_alias="gcsBucket")
-    ]
-    """The GCS bucket name from which to serve files."""
+__all__ = ["Config"]
 
 
 class Config(BaseModel):
@@ -39,13 +30,11 @@ class Config(BaseModel):
     data that rarely varies.
     """
 
-    datasets: dict[str, Dataset]
-    """A mapping of dataset names to GCS location info."""
+    buckets: dict[str, str]
+    """A mapping of identifiers to GCS buckets."""
 
-    default_dataset_name: Annotated[
-        str, Field(validation_alias="defaultDatasetName")
-    ]
-    """The dataset to serve from v1 routes. Must be a key in datasets."""
+    default_bucket: Annotated[str, Field(validation_alias="defaultBucket")]
+    """The GCS bucket to serve from v1 routes"""
 
     url_prefix: Annotated[
         str, Field(default="/api/hips", validation_alias="urlPrefix")
@@ -74,22 +63,6 @@ class Config(BaseModel):
         str, Field(default="INFO", validation_alias="logLevel")
     ]
     """The log level of the application's logger."""
-
-    @property
-    def default_dataset(self) -> Dataset:
-        """Return the DataSet that matches default_dataset_name."""
-        return self.datasets[self.default_dataset_name]
-
-    @model_validator(mode="after")
-    def validate_default_dataset_name(self) -> Self:
-        if self.default_dataset_name not in self.datasets:
-            msg = (
-                "default_dataset_name must be a key in the datasets value."
-                f" default_dataset_name: {self.default_dataset_name}, datasets"
-                f" keys: {self.datasets.keys()}"
-            )
-            raise ValueError(msg)
-        return self
 
     @classmethod
     def from_file(cls, path: Path) -> Self:
