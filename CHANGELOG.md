@@ -7,6 +7,13 @@ Find changes for the upcoming release in the project's [changelog.d directory](h
 
 <!-- scriv-insert-here -->
 
+<a id='changelog-3.0.0'></a>
+## 3.0.0 (2025-06-13)
+
+### Backwards-incompatible changes
+
+- Remove HiPS-specific terminology. This requires updating Phalanx config.
+
 <a id='changelog-2.0.0'></a>
 ## 2.0.0 (2025-06-06)
 
