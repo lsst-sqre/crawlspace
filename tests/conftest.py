@@ -16,7 +16,7 @@ from crawlspace import main
 from crawlspace.dependencies.config import config_dependency
 
 from .constants import TEST_DATA_DIR
-from .support import FixtureParameter, patch_google_storage_cm
+from .support import BucketInfo, FixtureParameter, patch_google_storage_cm
 
 
 @pytest_asyncio.fixture
@@ -57,12 +57,13 @@ fixture_parameters = [
 @pytest.fixture(
     params=fixture_parameters, ids=[f.fixture_id for f in fixture_parameters]
 )
-def url_prefix(request: pytest.FixtureRequest) -> Iterator[str]:
+def bucket_info(request: pytest.FixtureRequest) -> Iterator[BucketInfo]:
     """URL prefixes with GCP mocked for the expected bucket for each."""
     config = config_dependency.config()
     match request.param.version:
         case "v1":
-            bucket = config.default_bucket
+            bucket_key = config.default_bucket_key
+            bucket = config.get_default_bucket()
             url_prefix = config.url_prefix
         case "v2":
             bucket_key = request.param.bucket_key
@@ -72,6 +73,11 @@ def url_prefix(request: pytest.FixtureRequest) -> Iterator[str]:
             raise RuntimeError("Unknown parameter class")
 
     with patch_google_storage_cm(
-        path=Path(__file__).parent / "files", bucket_name=bucket
+        path=TEST_DATA_DIR / "files" / bucket_key,
+        bucket_name=bucket.name,
     ):
-        yield url_prefix
+        yield BucketInfo(
+            url_prefix=url_prefix,
+            bucket_key=bucket_key,
+            object_prefix=bucket.object_prefix,
+        )

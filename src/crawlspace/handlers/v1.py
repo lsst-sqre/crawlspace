@@ -9,6 +9,8 @@ from google.cloud import storage
 from safir.dependencies.logger import logger_dependency
 from structlog.stdlib import BoundLogger
 
+from crawlspace.config import Bucket
+
 from ..constants import PATH_REGEX
 from ..dependencies.config import config_dependency
 from ..dependencies.etag import etag_validation_dependency
@@ -40,7 +42,7 @@ def get_file(
     gcs: Annotated[storage.Client, Depends(gcs_client_dependency)],
     etags: Annotated[list[str], Depends(etag_validation_dependency)],
     logger: Annotated[BoundLogger, Depends(logger_dependency)],
-    bucket: str | None = None,
+    bucket: Bucket | None = None,
 ) -> Response:
     logger.debug("File request", path=path)
 
@@ -56,8 +58,8 @@ def get_file(
         path = "index.html"
 
     config = config_dependency.config()
-    bucket = bucket or config.default_bucket
-    file_service = FileService(gcs, bucket)
+    bucket = bucket or config.get_default_bucket()
+    file_service = FileService(gcs, bucket.name, bucket.object_prefix)
     try:
         crawlspace_file = file_service.get_file(path)
     except GCSFileNotFoundError as e:
@@ -102,7 +104,7 @@ def head_file(
     path: Annotated[str, Path(..., title="File path", pattern=PATH_REGEX)],
     gcs: Annotated[storage.Client, Depends(gcs_client_dependency)],
     logger: Annotated[BoundLogger, Depends(logger_dependency)],
-    bucket: str | None = None,
+    bucket: Bucket | None = None,
 ) -> Response:
     logger.debug("Head request", path=path)
 
@@ -118,8 +120,8 @@ def head_file(
         path = "index.html"
 
     config = config_dependency.config()
-    bucket = bucket or config.default_bucket
-    file_service = FileService(gcs, bucket)
+    bucket = bucket or config.get_default_bucket()
+    file_service = FileService(gcs, bucket.name, bucket.object_prefix)
     try:
         crawlspace_file = file_service.get_file(path)
     except GCSFileNotFoundError as e:

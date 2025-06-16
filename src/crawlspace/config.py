@@ -6,9 +6,19 @@ from pathlib import Path
 from typing import Annotated, Self
 
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 __all__ = ["Config"]
+
+
+class Bucket(BaseModel):
+    name: Annotated[str, Field(validation_alias="bucketName")]
+    """The name of the GCS bucket."""
+
+    object_prefix: Annotated[Path, Field(validation_alias="objectPrefix")] = (
+        Path()
+    )
+    """A filename prefix to append to every requested object."""
 
 
 class Config(BaseModel):
@@ -30,11 +40,13 @@ class Config(BaseModel):
     data that rarely varies.
     """
 
-    buckets: dict[str, str]
-    """A mapping of identifiers to GCS buckets."""
+    buckets: dict[str, Bucket]
+    """A mapping of identifiers to GCS bucket config."""
 
-    default_bucket: Annotated[str, Field(validation_alias="defaultBucket")]
-    """The GCS bucket to serve from v1 routes"""
+    default_bucket_key: Annotated[
+        str, Field(validation_alias="defaultBucketKey")
+    ]
+    """The key for the GCS bucket config to serve from v1 routes."""
 
     url_prefix: Annotated[
         str, Field(default="/api/hips", validation_alias="urlPrefix")
@@ -63,6 +75,20 @@ class Config(BaseModel):
         str, Field(default="INFO", validation_alias="logLevel")
     ]
     """The log level of the application's logger."""
+
+    def get_default_bucket(self) -> Bucket:
+        """Return the bucket config for the default bucket."""
+        return self.buckets[self.default_bucket_key]
+
+    @model_validator(mode="after")
+    def validate_default_bucket(self) -> Self:
+        if self.default_bucket_key not in self.buckets:
+            msg = (
+                f"Bucket key {self.default_bucket_key} not found. Available"
+                f" bucket keys: {self.buckets.keys()}"
+            )
+            raise ValueError(msg)
+        return self
 
     @classmethod
     def from_file(cls, path: Path) -> Self:

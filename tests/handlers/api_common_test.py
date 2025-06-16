@@ -4,17 +4,23 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from email.utils import format_datetime
-from pathlib import Path
 
 import pytest
 from httpx import AsyncClient
 
 from crawlspace.dependencies.config import config_dependency
 
+from ..constants import TEST_DATA_DIR
+from ..support import BucketInfo
+
 
 @pytest.mark.asyncio
-async def test_get_files(client: AsyncClient, url_prefix: str) -> None:
-    root = Path(__file__).parent.parent / "files"
+async def test_get_files(client: AsyncClient, bucket_info: BucketInfo) -> None:
+    bucket_key = bucket_info.bucket_key
+    object_prefix = bucket_info.object_prefix
+    url_prefix = bucket_info.url_prefix
+
+    root = TEST_DATA_DIR / "files" / bucket_key / object_prefix
     for path in root.iterdir():
         if path.is_dir():
             continue
@@ -54,8 +60,12 @@ async def test_get_files(client: AsyncClient, url_prefix: str) -> None:
 
 
 @pytest.mark.asyncio
-async def test_get_root(client: AsyncClient, url_prefix: str) -> None:
-    index = Path(__file__).parent.parent / "files" / "index.html"
+async def test_get_root(client: AsyncClient, bucket_info: BucketInfo) -> None:
+    bucket_key = bucket_info.bucket_key
+    object_prefix = bucket_info.object_prefix
+    url_prefix = bucket_info.url_prefix
+
+    index = TEST_DATA_DIR / "files" / bucket_key / object_prefix / "index.html"
 
     r = await client.get(url_prefix)
     assert r.status_code == 307
@@ -72,8 +82,12 @@ async def test_get_root(client: AsyncClient, url_prefix: str) -> None:
 
 
 @pytest.mark.asyncio
-async def test_head(client: AsyncClient, url_prefix: str) -> None:
-    root = Path(__file__).parent.parent / "files"
+async def test_head(client: AsyncClient, bucket_info: BucketInfo) -> None:
+    bucket_key = bucket_info.bucket_key
+    object_prefix = bucket_info.object_prefix
+    url_prefix = bucket_info.url_prefix
+
+    root = TEST_DATA_DIR / "files" / bucket_key / object_prefix
     for path in root.iterdir():
         if path.is_dir():
             continue
@@ -123,7 +137,9 @@ async def test_head(client: AsyncClient, url_prefix: str) -> None:
 
 
 @pytest.mark.asyncio
-async def test_errors(client: AsyncClient, url_prefix: str) -> None:
+async def test_errors(client: AsyncClient, bucket_info: BucketInfo) -> None:
+    url_prefix = bucket_info.url_prefix
+
     r = await client.get(f"{url_prefix}/missing")
     assert r.status_code == 404
 
@@ -141,8 +157,14 @@ async def test_errors(client: AsyncClient, url_prefix: str) -> None:
 
 
 @pytest.mark.asyncio
-async def test_cache_validation(client: AsyncClient, url_prefix: str) -> None:
-    index = Path(__file__).parent.parent / "files" / "index.html"
+async def test_cache_validation(
+    client: AsyncClient, bucket_info: BucketInfo
+) -> None:
+    bucket_key = bucket_info.bucket_key
+    object_prefix = bucket_info.object_prefix
+    url_prefix = bucket_info.url_prefix
+
+    index = TEST_DATA_DIR / "files" / bucket_key / object_prefix / "index.html"
 
     r = await client.get(f"{url_prefix}/")
     assert r.status_code == 200
@@ -186,7 +208,11 @@ async def test_cache_validation(client: AsyncClient, url_prefix: str) -> None:
 
 
 @pytest.mark.asyncio
-async def test_slash_redirect(client: AsyncClient, url_prefix: str) -> None:
+async def test_slash_redirect(
+    client: AsyncClient, bucket_info: BucketInfo
+) -> None:
+    url_prefix = bucket_info.url_prefix
+
     bad_url = f"{url_prefix}//Norder4/Dir0/Npix1794.png"
     good_url = f"{url_prefix}/Norder4/Dir0/Npix1794.png"
     r = await client.get(bad_url)

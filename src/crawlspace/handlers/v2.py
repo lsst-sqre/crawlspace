@@ -8,6 +8,8 @@ from google.cloud import storage
 from safir.dependencies.logger import logger_dependency
 from structlog.stdlib import BoundLogger
 
+from crawlspace.config import Bucket
+
 from ..constants import PATH_REGEX
 from ..dependencies.config import config_dependency
 from ..dependencies.etag import etag_validation_dependency
@@ -21,7 +23,7 @@ v2_router = APIRouter()
 """FastAPI router for v2 API handlers."""
 
 
-def _get_bucket(bucket_key: str) -> str:
+def _get_bucket(bucket_key: str) -> Bucket:
     """Get a bucket name from a key or raise a 404 if no such bucket exists.
 
     Parameters
