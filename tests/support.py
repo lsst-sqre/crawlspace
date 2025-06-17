@@ -10,11 +10,22 @@ from typing import Literal
 from google.api_core.exceptions import Unknown
 from safir.testing.gcs import MockStorageClient, patch_google_storage
 
-__all__ = ["FixtureParameter", "patch_google_storage_cm"]
+__all__ = ["BucketInfo", "FixtureParameter", "patch_google_storage_cm"]
+
+
+@dataclass
+class BucketInfo:
+    """Injected into tests."""
+
+    url_prefix: str
+    bucket_key: str
+    object_prefix: Path
 
 
 @dataclass
 class FixtureParameter:
+    """Injected into the bucket_info fixture."""
+
     version: Literal["v1", "v2"]
     bucket_key: str | None = None
 

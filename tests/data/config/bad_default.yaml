@@ -4,5 +4,4 @@ buckets:
     bucketName: "somebucket"
   ds2:
     bucketName: "someotherbucket"
-    objectPrefix: "someprefix"
-defaultBucketKey: "ds1"
+defaultBucketKey: "nope"

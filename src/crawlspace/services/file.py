@@ -6,6 +6,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from email.utils import format_datetime
 from mimetypes import guess_type
+from pathlib import Path
 
 from google.cloud import storage
 
@@ -76,9 +77,10 @@ class FileService:
         metadata.
     """
 
-    def __init__(self, gcs: storage.Client, bucket: str) -> None:
+    def __init__(self, gcs: storage.Client, bucket: str, prefix: Path) -> None:
         self._gcs = gcs
         self._bucket = bucket
+        self._prefix = prefix
 
     def get_file(self, path: str) -> CrawlspaceFile:
         """Retrieve a file from Google Cloud Storage.
@@ -97,8 +99,9 @@ class FileService:
             The path was not found in the configured GCS bucket.
         """
         bucket = self._gcs.bucket(self._bucket)
-        blob = bucket.blob(path)
+        prefixed = str(self._prefix / path)
+        blob = bucket.blob(prefixed)
         if not blob.exists():
-            raise GCSFileNotFoundError(path)
+            raise GCSFileNotFoundError(prefixed)
         blob.reload()
         return CrawlspaceFile.from_blob(path, blob)
