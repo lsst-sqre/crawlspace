@@ -7,6 +7,26 @@ Find changes for the upcoming release in the project's [changelog.d directory](h
 
 <!-- scriv-insert-here -->
 
+<a id='changelog-4.0.0'></a>
+## 4.0.0 (2025-06-17)
+
+### Backwards-incompatible changes
+
+- An object prefix can be now specified for a bucket configuration. Any path in a crawspace request will have this object prefix appended to it before sending it to the backing GCS bucket. Note this requires changes to the Phalanx configuration, even for deployments that are not using bucket prefixes.
+
+  For example, with this config:
+
+  ```yaml
+  gcsProject: "someproject"
+  buckets:
+    ds2:
+      bucketName: "someotherbucket"
+      objectPrefix: "someprefix"
+  defaultBucketKey: "ds2"
+  ```
+
+  A request to `https://wherever.com/api/hips/v2/ds2/some/image.jpg` will result in a request for the `someprefix/some/image.jpg` object in the `someotherbucket` GCS bucket.
+
 <a id='changelog-3.0.0'></a>
 ## 3.0.0 (2025-06-13)
 
