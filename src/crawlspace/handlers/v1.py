@@ -63,7 +63,9 @@ def get_file(
     try:
         crawlspace_file = file_service.get_file(path)
     except GCSFileNotFoundError as e:
-        logger.debug("File not found", path=path)
+        logger.debug(
+            "File not found", requested_path=path, prefixed_path=e.path
+        )
         raise HTTPException(status_code=404, detail="File not found") from e
     except Exception as e:
         logger.exception(f"Failed to retrieve {path}", error=str(e))
