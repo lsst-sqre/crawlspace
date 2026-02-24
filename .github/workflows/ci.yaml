@@ -15,6 +15,7 @@ env:
       # optimization so there's no need to ensure this is comprehensive.
       - "dependabot/**"
       - "renovate/**"
+      - "t/**"
       - "tickets/**"
       - "u/**"
     tags:
@@ -53,7 +54,8 @@ jobs:
     if: >
       github.event_name != 'merge_group'
       && (startsWith(github.ref, 'refs/tags/')
-          || startsWith(github.head_ref, 'tickets/'))
+          || startsWith(github.head_ref, 'tickets/')
+          || startsWith(github.head_ref, 't/'))
 
     steps:
       - uses: actions/checkout@v6
