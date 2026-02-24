@@ -51,7 +51,7 @@ class CrawlspaceFile:
             media_type = "application/x-votable+xml"
         else:
             guessed_type, _ = guess_type(path)
-            media_type = guessed_type if guessed_type else "text/plain"
+            media_type = guessed_type or "text/plain"
         return cls(blob=blob, headers=headers, media_type=media_type)
 
     def download_as_bytes(self) -> bytes:

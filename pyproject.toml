@@ -41,6 +41,32 @@ crawlspace = "crawlspace.cli:main"
 requires = ["setuptools>=61", "wheel", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
+[dependency-groups]
+dev = [
+    "asgi-lifespan",
+    "coverage[toml]",
+    "httpx",
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+    "pytest-sugar",
+    "scriv[toml]>=1.5",
+]
+lint = [
+    "pre-commit",
+    "pre-commit-uv",
+    "ruff>=0.9",
+]
+tox = [
+    "tox>=4.24",
+    "tox-docker>=5",
+    "tox-uv>=1.25",
+]
+typing = [
+    "mypy>=1.15",
+    "types-pyyaml>=6",
+]
+
 [tool.coverage.run]
 parallel = true
 branch = true
@@ -87,7 +113,7 @@ asyncio_default_fixture_loop_scope = "function"
 asyncio_mode = "strict"
 # The python_files setting is not for test detection (pytest will pick up any
 # test files named *_test.py without this setting) but to enable special
-# assert processing in any non-test supporting files under tests.  We
+# assert processing in any non-test supporting files under tests. We
 # conventionally put test support functions under tests.support and may
 # sometimes use assert in test fixtures in conftest.py, and pytest only
 # enables magical assert processing (showing a full diff on assert failures
@@ -103,7 +129,6 @@ extend = "ruff-shared.toml"
 
 [tool.ruff.lint.isort]
 known-first-party = ["crawlspace", "tests"]
-split-on-trailing-comma = false
 
 [tool.scriv]
 categories = [
@@ -117,34 +142,5 @@ format = "md"
 md_header_level = "2"
 new_fragment_template = "file:changelog.d/_template.md.jinja"
 skip_fragments = "_template.md.jinja"
-
-[dependency-groups]
-dev = [
-    "asgi-lifespan",
-    "coverage[toml]",
-    "httpx",
-    "pytest",
-    "pytest-asyncio",
-    "pytest-cov",
-    "pytest-sugar",
-    "scriv[toml]>=1.5",
-]
-
-lint = [
-    "pre-commit",
-    "pre-commit-uv",
-    "ruff>=0.9",
-]
-
-tox = [
-    "tox>=4.24",
-    "tox-docker>=5",
-    "tox-uv>=1.25",
-]
-
-typing = [
-    "mypy>=1.15",
-    "types-pyyaml>=6",
-]
 
 [tool.setuptools_scm]
