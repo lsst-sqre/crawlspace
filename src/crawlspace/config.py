@@ -6,77 +6,112 @@ from pathlib import Path
 from typing import Annotated, Self
 
 import yaml
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic.alias_generators import to_camel
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from safir.logging import LogLevel, Profile
 
-__all__ = ["Config"]
+__all__ = ["BucketConfig", "Config"]
 
 
-class Bucket(BaseModel):
-    name: Annotated[str, Field(validation_alias="bucketName")]
-    """The name of the GCS bucket."""
+class BucketConfig(BaseModel):
+    """Configuration for a GCS bucket used as an object source."""
 
-    object_prefix: Annotated[Path, Field(validation_alias="objectPrefix")] = (
-        Path()
+    model_config = ConfigDict(
+        alias_generator=to_camel, extra="forbid", populate_by_name=True
     )
-    """A filename prefix to append to every requested object."""
+
+    bucket_name: Annotated[str, Field(title="Bucket name")]
+
+    object_prefix: Annotated[
+        Path,
+        Field(
+            title="Object prefix",
+            description=(
+                "Prefix to append to every requested object to determine its"
+                " path within the bucket"
+            ),
+        ),
+    ] = Path()
 
 
-class Config(BaseModel):
+class Config(BaseSettings):
     """Configuration for crawlspace."""
 
-    gcs_project: Annotated[
-        str, Field(default="None", validation_alias="gcsProject")
-    ]
+    model_config = SettingsConfigDict(
+        alias_generator=to_camel, extra="forbid", populate_by_name=True
+    )
 
-    """The GCS project from which to serve files."""
+    buckets: Annotated[
+        dict[str, BucketConfig],
+        Field(
+            title="Bucket configurations",
+            description=(
+                "Mapping of identifiers (path components) to GCS bucket"
+                " configurations"
+            ),
+        ),
+    ]
 
     cache_max_age: Annotated[
-        int, Field(default=3600, validation_alias="cacheMaxAge")
-    ]
-    """Length of time in seconds for which browsers should cache results.
-
-    The default is one hour.  Set this shorter for testing when the content
-    may be changing frequently, and longer for production when serving static
-    data that rarely varies.
-    """
-
-    buckets: dict[str, Bucket]
-    """A mapping of identifiers to GCS bucket config."""
+        int,
+        Field(
+            title="Max age of resources (seconds)",
+            description=(
+                "Controls how long the client is willing to cache. The default"
+                " is one hour. Set this to shorter for testing when the"
+                " content may be changing frequently, and longer when serving"
+                " static files that are very unlikely to change."
+            ),
+        ),
+    ] = 3600
 
     default_bucket_key: Annotated[
-        str, Field(validation_alias="defaultBucketKey")
+        str,
+        Field(
+            title="Bucket for v1 route",
+            description=(
+                "Key of the bucket configuration to use for the deprecated v1"
+                " routes"
+            ),
+        ),
     ]
-    """The key for the GCS bucket config to serve from v1 routes."""
 
-    url_prefix: Annotated[
-        str, Field(default="/api/hips", validation_alias="urlPrefix")
+    gcs_project: Annotated[
+        str,
+        Field(
+            title="GCS project",
+            description="Project from which to serve files",
+        ),
     ]
-    """URL prefix for v1 routes."""
-
-    v2_url_prefix: Annotated[
-        str, Field(default="/api/hips/v2", validation_alias="urlPrefixV2")
-    ]
-    """URL prefix for v2 routes."""
-
-    name: Annotated[str, Field(default="crawlspace", validation_alias="name")]
-    """The application's name, which doubles as the root HTTP endpoint path."""
-
-    profile: Annotated[
-        str, Field(default="production", validation_alias="profile")
-    ]
-    """Application run profile: "development" or "production"."""
-
-    logger_name: Annotated[
-        str, Field(default="crawlspace", validation_alias="loggerName")
-    ]
-    """The root name of the application's logger."""
 
     log_level: Annotated[
-        str, Field(default="INFO", validation_alias="logLevel")
-    ]
-    """The log level of the application's logger."""
+        LogLevel, Field(title="Log level of application logger")
+    ] = LogLevel.INFO
 
-    def get_default_bucket(self) -> Bucket:
+    log_profile: Annotated[
+        Profile, Field(title="Application logging profile")
+    ] = Profile.development
+
+    name: Annotated[str, Field(title="Name of application")] = "crawlspace"
+
+    path_prefix: Annotated[
+        str,
+        Field(
+            title="URL prefix",
+            description="Prefix used for v2 (current API) routes",
+        ),
+    ] = "/api/hips/v2"
+
+    v1_path_prefix: Annotated[
+        str,
+        Field(
+            title="URL prefix (v1)",
+            description="Prefix used for v1 routes",
+        ),
+    ] = "/api/hips"
+
+    def get_default_bucket(self) -> BucketConfig:
         """Return the bucket config for the default bucket."""
         return self.buckets[self.default_bucket_key]
 

@@ -11,7 +11,7 @@ def test_default_bucket() -> None:
     config_path = TEST_DATA_DIR / "config" / "base.yaml"
     config_dependency.set_config_path(config_path)
     config = config_dependency.config()
-    assert config.get_default_bucket().name == "somebucket"
+    assert config.get_default_bucket().bucket_name == "somebucket"
 
 
 def test_bad_default_bucket() -> None:

@@ -25,23 +25,24 @@ def create_app() -> FastAPI:
     """Create the application."""
     config = config_dependency.config()
     configure_logging(
-        profile=config.profile,
+        profile=config.log_profile,
         log_level=config.log_level,
-        name=config.logger_name,
+        name="crawlspace",
     )
 
     app = FastAPI(
         title="crawlspace",
         description=metadata("crawlspace")["Summary"],
         version=version("crawlspace"),
-        openapi_url=f"{config.url_prefix}/openapi.json",
-        docs_url=f"{config.url_prefix}/docs",
-        redoc_url=f"{config.url_prefix}/redoc",
+        openapi_url=f"{config.v1_path_prefix}/openapi.json",
+        docs_url=f"{config.v1_path_prefix}/docs",
+        redoc_url=f"{config.v1_path_prefix}/redoc",
     )
+
     # Attach the routers.
     app.include_router(internal_router)
-    app.include_router(v2_router, prefix=f"{config.v2_url_prefix}")
-    app.include_router(v1_router, prefix=config.url_prefix)
+    app.include_router(v2_router, prefix=f"{config.path_prefix}")
+    app.include_router(v1_router, prefix=config.v1_path_prefix)
 
     # Add the middleware
     app.add_middleware(XForwardedMiddleware)

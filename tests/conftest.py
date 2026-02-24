@@ -60,21 +60,21 @@ fixture_parameters = [
 def bucket_info(request: pytest.FixtureRequest) -> Iterator[BucketInfo]:
     """URL prefixes with GCP mocked for the expected bucket for each."""
     config = config_dependency.config()
-    match request.param.version:
+    param: FixtureParameter = request.param
+    match param.version:
         case "v1":
             bucket_key = config.default_bucket_key
             bucket = config.get_default_bucket()
-            url_prefix = config.url_prefix
+            url_prefix = config.v1_path_prefix
         case "v2":
-            bucket_key = request.param.bucket_key
+            assert param.bucket_key
+            bucket_key = param.bucket_key
             bucket = config.buckets[bucket_key]
-            url_prefix = f"{config.v2_url_prefix}/{bucket_key}"
-        case _:
-            raise RuntimeError("Unknown parameter class")
+            url_prefix = f"{config.path_prefix}/{bucket_key}"
 
     with patch_google_storage_cm(
         path=TEST_DATA_DIR / "files" / bucket_key,
-        bucket_name=bucket.name,
+        bucket_name=bucket.bucket_name,
     ):
         yield BucketInfo(
             url_prefix=url_prefix,
