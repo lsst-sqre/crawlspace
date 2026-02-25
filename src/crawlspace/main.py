@@ -10,7 +10,7 @@ called.
 from importlib.metadata import metadata, version
 
 from fastapi import FastAPI
-from safir.logging import configure_logging
+from safir.logging import Profile, configure_logging, configure_uvicorn_logging
 from safir.middleware.x_forwarded import XForwardedMiddleware
 
 from .dependencies.config import config_dependency
@@ -29,6 +29,8 @@ def create_app() -> FastAPI:
         log_level=config.log_level,
         name="crawlspace",
     )
+    if config.log_profile == Profile.production:
+        configure_uvicorn_logging(config.log_level)
 
     app = FastAPI(
         title="crawlspace",
