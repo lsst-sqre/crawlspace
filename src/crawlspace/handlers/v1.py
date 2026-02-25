@@ -9,8 +9,7 @@ from google.cloud import storage
 from safir.dependencies.logger import logger_dependency
 from structlog.stdlib import BoundLogger
 
-from crawlspace.config import BucketConfig
-
+from ..config import BucketConfig
 from ..constants import PATH_REGEX
 from ..dependencies.config import config_dependency
 from ..dependencies.etag import etag_validation_dependency
