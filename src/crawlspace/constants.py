@@ -1,7 +1,5 @@
 """Constants for crawlspace."""
 
-from __future__ import annotations
-
 from pathlib import Path
 
 __all__ = ["CONFIG_PATH", "CONFIG_PATH_ENV_VAR", "PATH_REGEX"]

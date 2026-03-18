@@ -1,7 +1,5 @@
 """File retrieval from Google Cloud Storage."""
 
-from __future__ import annotations
-
 from collections.abc import Iterator
 from dataclasses import dataclass
 from email.utils import format_datetime

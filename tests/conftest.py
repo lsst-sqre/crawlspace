@@ -1,7 +1,5 @@
 """Test fixtures for crawlspace tests."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator, Iterator
 from pathlib import Path
 
