@@ -8,24 +8,23 @@ import pytest_asyncio
 from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
+from safir.testing.data import Data
 from safir.testing.gcs import MockStorageClient, patch_google_storage
 
 from crawlspace import main
 from crawlspace.dependencies.config import config_dependency
 
-from .constants import TEST_DATA_DIR
 from .support import BucketInfo, FixtureParameter, patch_google_storage_cm
 
 
 @pytest_asyncio.fixture
-async def app() -> AsyncGenerator[FastAPI]:
+async def app(data: Data) -> AsyncGenerator[FastAPI]:
     """Return a configured test application.
 
     Wraps the application in a lifespan manager so that startup and shutdown
     events are sent during test execution.
     """
-    config_path = TEST_DATA_DIR / "config" / "base.yaml"
-    config_dependency.set_config_path(config_path)
+    config_dependency.set_config_path(data.path("config/base.yaml"))
     app = main.create_app()
     async with LifespanManager(app):
         yield app
@@ -38,6 +37,11 @@ async def client(app: FastAPI) -> AsyncGenerator[AsyncClient]:
         transport=ASGITransport(app), base_url="https://example.com/"
     ) as client:
         yield client
+
+
+@pytest.fixture
+def data(request: pytest.FixtureRequest) -> Data:
+    return Data(Path(__file__).parent / "data")
 
 
 @pytest.fixture
@@ -55,7 +59,9 @@ fixture_parameters = [
 @pytest.fixture(
     params=fixture_parameters, ids=[f.fixture_id for f in fixture_parameters]
 )
-def bucket_info(request: pytest.FixtureRequest) -> Iterator[BucketInfo]:
+def bucket_info(
+    data: Data, request: pytest.FixtureRequest
+) -> Iterator[BucketInfo]:
     """URL prefixes with GCP mocked for the expected bucket for each."""
     config = config_dependency.config()
     param: FixtureParameter = request.param
@@ -71,8 +77,7 @@ def bucket_info(request: pytest.FixtureRequest) -> Iterator[BucketInfo]:
             url_prefix = f"{config.path_prefix}/{bucket_key}"
 
     with patch_google_storage_cm(
-        path=TEST_DATA_DIR / "files" / bucket_key,
-        bucket_name=bucket.bucket_name,
+        path=data.path(f"files/{bucket_key}"), bucket_name=bucket.bucket_name
     ):
         yield BucketInfo(
             url_prefix=url_prefix,

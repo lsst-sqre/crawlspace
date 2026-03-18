@@ -24,7 +24,7 @@ dependencies = [
     "pydantic>=2.11",
     "pyyaml>=6",
     "uvicorn[standard]>=0.34",
-    "safir[gcs]>=9.2",
+    "safir[gcs]>=14.2",
     "structlog>=25",
 ]
 dynamic = ["version"]
