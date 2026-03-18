@@ -270,7 +270,7 @@ requires-dist = [
     { name = "google-cloud-storage", specifier = ">=3.4.1" },
     { name = "pydantic", specifier = ">=2.11" },
     { name = "pyyaml", specifier = ">=6" },
-    { name = "safir", extras = ["gcs"], specifier = ">=5" },
+    { name = "safir", extras = ["gcs"], specifier = ">=9.2" },
     { name = "structlog", specifier = ">=25" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.34" },
 ]
