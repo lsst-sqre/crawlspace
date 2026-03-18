@@ -32,9 +32,6 @@ dynamic = ["version"]
 Homepage = "https://github.com/lsst-sqre/crawlspace"
 Source = "https://github.com/lsst-sqre/crawlspace"
 
-[project.scripts]
-crawlspace = "crawlspace.cli:main"
-
 [build-system]
 requires = ["setuptools>=61", "wheel", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
