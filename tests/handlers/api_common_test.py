@@ -9,7 +9,7 @@ from safir.testing.data import Data
 
 from crawlspace.dependencies.config import config_dependency
 
-from ..support import BucketInfo
+from ..support.gcs import BucketInfo
 
 
 @pytest.mark.asyncio
