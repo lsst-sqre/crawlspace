@@ -20,8 +20,8 @@ async def test_no_bucket_key_in_path(client: AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_bucket_key_not_found(client: AsyncClient) -> None:
     config = config_dependency.config()
-    r = await client.get(f"{config.path_prefix}/nope")
+    r = await client.get(f"{config.path_prefix}/nope", follow_redirects=True)
     assert r.status_code == 404
-    assert "Available bucket keys:" in r.text
+    assert "Bucket nope not found" in r.text
     assert "ds1" in r.text
     assert "ds2" in r.text

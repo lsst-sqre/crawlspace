@@ -4,10 +4,10 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from email.utils import format_datetime
 from mimetypes import guess_type
-from pathlib import Path
 
 from google.cloud import storage
 
+from ..config import BucketConfig
 from ..dependencies.config import config_dependency
 from ..exceptions import GCSFileNotFoundError
 
@@ -75,12 +75,10 @@ class FileService:
         metadata.
     """
 
-    def __init__(self, gcs: storage.Client, bucket: str, prefix: Path) -> None:
+    def __init__(self, gcs: storage.Client) -> None:
         self._gcs = gcs
-        self._bucket = bucket
-        self._prefix = prefix
 
-    def get_file(self, path: str) -> CrawlspaceFile:
+    def get_file(self, config: BucketConfig, path: str) -> CrawlspaceFile:
         """Retrieve a file from Google Cloud Storage.
 
         Exception from Google Cloud Storage are propagated without
@@ -88,6 +86,8 @@ class FileService:
 
         Parameters
         ----------
+        config
+            Configuration for the storage bucket.
         path
             Path to the file.
 
@@ -96,8 +96,8 @@ class FileService:
         crawlspace.exceptions.GCSFileNotFoundError
             The path was not found in the configured GCS bucket.
         """
-        bucket = self._gcs.bucket(self._bucket)
-        prefixed = str(self._prefix / path)
+        bucket = self._gcs.bucket(config.bucket_name)
+        prefixed = str(config.object_prefix / path)
         blob = bucket.blob(prefixed)
         if not blob.exists():
             raise GCSFileNotFoundError(prefixed)
