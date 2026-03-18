@@ -5,20 +5,22 @@ from email.utils import format_datetime
 
 import pytest
 from httpx import AsyncClient
+from safir.testing.data import Data
 
 from crawlspace.dependencies.config import config_dependency
 
-from ..constants import TEST_DATA_DIR
 from ..support import BucketInfo
 
 
 @pytest.mark.asyncio
-async def test_get_files(client: AsyncClient, bucket_info: BucketInfo) -> None:
+async def test_get_files(
+    client: AsyncClient, data: Data, bucket_info: BucketInfo
+) -> None:
     bucket_key = bucket_info.bucket_key
     object_prefix = bucket_info.object_prefix
     url_prefix = bucket_info.url_prefix
 
-    root = TEST_DATA_DIR / "files" / bucket_key / object_prefix
+    root = data.path(f"files/{bucket_key}/{object_prefix}")
     for path in root.iterdir():
         if path.is_dir():
             continue
@@ -58,12 +60,13 @@ async def test_get_files(client: AsyncClient, bucket_info: BucketInfo) -> None:
 
 
 @pytest.mark.asyncio
-async def test_get_root(client: AsyncClient, bucket_info: BucketInfo) -> None:
+async def test_get_root(
+    client: AsyncClient, data: Data, bucket_info: BucketInfo
+) -> None:
     bucket_key = bucket_info.bucket_key
     object_prefix = bucket_info.object_prefix
     url_prefix = bucket_info.url_prefix
-
-    index = TEST_DATA_DIR / "files" / bucket_key / object_prefix / "index.html"
+    index = data.path(f"files/{bucket_key}/{object_prefix}/index.html")
 
     r = await client.get(url_prefix)
     assert r.status_code == 307
@@ -80,12 +83,14 @@ async def test_get_root(client: AsyncClient, bucket_info: BucketInfo) -> None:
 
 
 @pytest.mark.asyncio
-async def test_head(client: AsyncClient, bucket_info: BucketInfo) -> None:
+async def test_head(
+    client: AsyncClient, data: Data, bucket_info: BucketInfo
+) -> None:
     bucket_key = bucket_info.bucket_key
     object_prefix = bucket_info.object_prefix
     url_prefix = bucket_info.url_prefix
 
-    root = TEST_DATA_DIR / "files" / bucket_key / object_prefix
+    root = data.path(f"files/{bucket_key}/{object_prefix}")
     for path in root.iterdir():
         if path.is_dir():
             continue
@@ -156,13 +161,12 @@ async def test_errors(client: AsyncClient, bucket_info: BucketInfo) -> None:
 
 @pytest.mark.asyncio
 async def test_cache_validation(
-    client: AsyncClient, bucket_info: BucketInfo
+    client: AsyncClient, data: Data, bucket_info: BucketInfo
 ) -> None:
     bucket_key = bucket_info.bucket_key
     object_prefix = bucket_info.object_prefix
     url_prefix = bucket_info.url_prefix
-
-    index = TEST_DATA_DIR / "files" / bucket_key / object_prefix / "index.html"
+    index = data.path(f"files/{bucket_key}/{object_prefix}/index.html")
 
     r = await client.get(f"{url_prefix}/")
     assert r.status_code == 200
