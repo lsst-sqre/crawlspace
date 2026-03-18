@@ -1,7 +1,5 @@
 """Tests for common functionality in the v1 and v2 handlers."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime
 from email.utils import format_datetime
 

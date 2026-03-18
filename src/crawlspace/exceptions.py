@@ -1,7 +1,5 @@
 """Custom exceptions for crawlspace."""
 
-from __future__ import annotations
-
 
 class GCSFileNotFoundError(Exception):
     """Path was not found in the configured GCS bucket.

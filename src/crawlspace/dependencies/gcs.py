@@ -1,7 +1,5 @@
 """Google Cloud Storage dependency for FastAPI."""
 
-from __future__ import annotations
-
 from contextvars import ContextVar
 
 from google.cloud import storage

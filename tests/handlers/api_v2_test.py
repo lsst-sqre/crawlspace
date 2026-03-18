@@ -1,7 +1,5 @@
 """Tests for functionality specific to the v2 handler."""
 
-from __future__ import annotations
-
 import pytest
 from httpx import AsyncClient
 
