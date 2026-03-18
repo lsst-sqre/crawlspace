@@ -19,23 +19,18 @@ classifiers = [
 ]
 requires-python = ">=3.13"
 dependencies = [
-    "fastapi!=0.89.0",
-    "starlette",
-    "uvicorn[standard]",
-
-    # Other dependencies.
+    "google-cloud-storage>=3.4.1",
+    "fastapi>=0.100",
     "pydantic>=2.11",
-    "google-cloud-storage",
-    "safir[gcs]",
+    "pyyaml>=6",
+    "uvicorn[standard]>=0.34",
+    "safir[gcs]>=5",
 ]
 dynamic = ["version"]
 
 [project.urls]
 Homepage = "https://github.com/lsst-sqre/crawlspace"
 Source = "https://github.com/lsst-sqre/crawlspace"
-
-[project.scripts]
-crawlspace = "crawlspace.cli:main"
 
 [build-system]
 requires = ["setuptools>=61", "wheel", "setuptools_scm[toml]>=6.2"]
@@ -59,7 +54,6 @@ lint = [
 ]
 tox = [
     "tox>=4.24",
-    "tox-docker>=5",
     "tox-uv>=1.25",
 ]
 typing = [
