@@ -38,6 +38,5 @@ async def get_index() -> Metadata:
     """
     config = config_dependency.config()
     return get_metadata(
-        package_name="crawlspace",
-        application_name=config.name,
+        package_name="crawlspace", application_name=config.name
     )
