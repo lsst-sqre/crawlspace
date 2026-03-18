@@ -2,6 +2,7 @@
 
 from datetime import UTC, datetime
 from email.utils import format_datetime
+from pathlib import Path
 
 import pytest
 from httpx import AsyncClient
@@ -12,20 +13,69 @@ from crawlspace.dependencies.config import config_dependency
 from ..support.gcs import BucketInfo
 
 
-@pytest.mark.asyncio
-async def test_get_files(
-    client: AsyncClient, data: Data, bucket_info: BucketInfo
+def guess_mime_type(path: Path) -> str:
+    """Guess the expected MIME type for a file.
+
+    Parameters
+    ----------
+    path
+        Path to the file.
+
+    Returns
+    -------
+    str
+        Guessed ``Content-Type`` string.
+    """
+    match path.suffix:
+        case ".fits":
+            return "application/fits"
+        case ".html":
+            return "text/html; charset=utf-8"
+        case ".jpg":
+            return "image/jpeg"
+        case ".png":
+            return "image/png"
+        case ".xml":
+            return "application/x-votable+xml"
+        case _:
+            return "text/plain; charset=utf-8"
+
+
+async def assert_files_match(
+    client: AsyncClient,
+    data: Data,
+    bucket_info: BucketInfo,
+    *,
+    head: bool = False,
 ) -> None:
+    """Retrieve all files in a mock bucket and verify the responses.
+
+    Parameters
+    ----------
+    client
+        Client to use to make API calls.
+    data
+        Test data management object.
+    bucket_info
+        Information about the test bucket.
+    head
+        Make ``HEAD`` requests instead of ``GET`` requests.
+    """
     bucket_key = bucket_info.bucket_key
     object_prefix = bucket_info.object_prefix
     url_prefix = bucket_info.url_prefix
-
+    config = config_dependency.config()
     root = data.path(f"files/{bucket_key}/{object_prefix}")
+
+    # Test retrieval of everything at the top level.
     for path in root.iterdir():
         if path.is_dir():
             continue
-        config = config_dependency.config()
-        r = await client.get(f"{url_prefix}/{path.name}")
+
+        if head:
+            r = await client.head(f"{url_prefix}/{path.name}")
+        else:
+            r = await client.get(f"{url_prefix}/{path.name}")
         assert r.status_code == 200
         expected_cache = f"private, max-age={config.cache_max_age}"
         assert r.headers["Cache-Control"] == expected_cache
@@ -33,30 +83,42 @@ async def test_get_files(
         assert r.headers["Etag"] == f'"{path.stat().st_ino!s}"'
         mod = datetime.fromtimestamp(path.stat().st_mtime, tz=UTC)
         assert r.headers["Last-Modified"] == format_datetime(mod, usegmt=True)
-
-        if path.suffix == ".fits":
-            expected_type = "application/fits"
-        elif path.suffix == ".html":
-            expected_type = "text/html; charset=utf-8"
-        elif path.suffix == ".xml":
-            expected_type = "application/x-votable+xml"
-        elif path.suffix == ".jpg":
-            expected_type = "image/jpeg"
+        assert r.headers["Content-Type"] == guess_mime_type(path)
+        if head:
+            assert r.read() == b""
         else:
-            expected_type = "text/plain; charset=utf-8"
-        assert r.headers["Content-Type"] == expected_type
+            assert r.read() == path.read_bytes()
 
-        assert r.read() == path.read_bytes()
-
-    r = await client.get(f"{url_prefix}/Norder4/Dir0/Npix1794.png")
+    # Test retrieval of one of the nested PNG files.
+    if head:
+        r = await client.head(f"{url_prefix}/Norder4/Dir0/Npix1794.png")
+    else:
+        r = await client.get(f"{url_prefix}/Norder4/Dir0/Npix1794.png")
     assert r.status_code == 200
     path = root / "Norder4" / "Dir0" / "Npix1794.png"
     assert r.headers["Content-Length"] == str(path.stat().st_size)
-    assert r.headers["Content-Type"] == "image/png"
+    assert r.headers["Content-Type"] == guess_mime_type(path)
     assert r.headers["Etag"] == f'"{path.stat().st_ino!s}"'
     mod = datetime.fromtimestamp(path.stat().st_mtime, tz=UTC)
     assert r.headers["Last-Modified"] == format_datetime(mod, usegmt=True)
-    assert r.read() == path.read_bytes()
+    if head:
+        assert r.read() == b""
+    else:
+        assert r.read() == path.read_bytes()
+
+
+@pytest.mark.asyncio
+async def test_get(
+    client: AsyncClient, data: Data, bucket_info: BucketInfo
+) -> None:
+    await assert_files_match(client, data, bucket_info)
+
+
+@pytest.mark.asyncio
+async def test_head(
+    client: AsyncClient, data: Data, bucket_info: BucketInfo
+) -> None:
+    await assert_files_match(client, data, bucket_info, head=True)
 
 
 @pytest.mark.asyncio
@@ -80,63 +142,6 @@ async def test_get_root(
     mod = datetime.fromtimestamp(index.stat().st_mtime, tz=UTC)
     assert r.headers["Last-Modified"] == format_datetime(mod, usegmt=True)
     assert r.read() == index.read_bytes()
-
-
-@pytest.mark.asyncio
-async def test_head(
-    client: AsyncClient, data: Data, bucket_info: BucketInfo
-) -> None:
-    bucket_key = bucket_info.bucket_key
-    object_prefix = bucket_info.object_prefix
-    url_prefix = bucket_info.url_prefix
-
-    root = data.path(f"files/{bucket_key}/{object_prefix}")
-    for path in root.iterdir():
-        if path.is_dir():
-            continue
-        config = config_dependency.config()
-        r = await client.head(f"{url_prefix}/{path.name}")
-        assert r.status_code == 200
-        expected_cache = f"private, max-age={config.cache_max_age}"
-        assert r.headers["Cache-Control"] == expected_cache
-        assert r.headers["Content-Length"] == str(path.stat().st_size)
-        assert r.headers["Etag"] == f'"{path.stat().st_ino!s}"'
-        mod = datetime.fromtimestamp(path.stat().st_mtime, tz=UTC)
-        assert r.headers["Last-Modified"] == format_datetime(mod, usegmt=True)
-
-        if path.suffix == ".fits":
-            expected_type = "application/fits"
-        elif path.suffix == ".html":
-            expected_type = "text/html; charset=utf-8"
-        elif path.suffix == ".xml":
-            expected_type = "application/x-votable+xml"
-        elif path.suffix == ".jpg":
-            expected_type = "image/jpeg"
-        else:
-            expected_type = "text/plain; charset=utf-8"
-        assert r.headers["Content-Type"] == expected_type
-
-        assert r.read() == b""
-
-    r = await client.head(f"{url_prefix}/Norder4/Dir0/Npix1794.png")
-    assert r.status_code == 200
-    path = root / "Norder4" / "Dir0" / "Npix1794.png"
-    assert r.headers["Content-Length"] == str(path.stat().st_size)
-    assert r.headers["Content-Type"] == "image/png"
-    assert r.headers["Etag"] == f'"{path.stat().st_ino!s}"'
-    mod = datetime.fromtimestamp(path.stat().st_mtime, tz=UTC)
-    assert r.headers["Last-Modified"] == format_datetime(mod, usegmt=True)
-    assert r.read() == b""
-
-    path = root / "index.html"
-    r = await client.head(f"{url_prefix}/")
-    assert r.status_code == 200
-    assert r.headers["Content-Length"] == str(path.stat().st_size)
-    assert r.headers["Content-Type"] == "text/html; charset=utf-8"
-    assert r.headers["Etag"] == f'"{path.stat().st_ino!s}"'
-    mod = datetime.fromtimestamp(path.stat().st_mtime, tz=UTC)
-    assert r.headers["Last-Modified"] == format_datetime(mod, usegmt=True)
-    assert r.read() == b""
 
 
 @pytest.mark.asyncio
@@ -215,22 +220,17 @@ async def test_slash_redirect(
 ) -> None:
     url_prefix = bucket_info.url_prefix
 
-    bad_url = f"{url_prefix}//Norder4/Dir0/Npix1794.png"
     good_url = f"{url_prefix}/Norder4/Dir0/Npix1794.png"
-    r = await client.get(bad_url)
-    assert r.status_code == 301
-    assert r.headers["Location"] == good_url
-    r = await client.head(bad_url)
-    assert r.status_code == 301
-    assert r.headers["Location"] == good_url
-
-    bad_url = f"{url_prefix}/Norder4/Dir0//Npix1794.png"
-    r = await client.get(bad_url)
-    assert r.status_code == 301
-    assert r.headers["Location"] == good_url
-    r = await client.head(bad_url)
-    assert r.status_code == 301
-    assert r.headers["Location"] == good_url
+    for bad_url in (
+        f"{url_prefix}//Norder4/Dir0/Npix1794.png",
+        f"{url_prefix}/Norder4/Dir0//Npix1794.png",
+    ):
+        r = await client.get(bad_url)
+        assert r.status_code == 301
+        assert r.headers["Location"] == good_url
+        r = await client.head(bad_url)
+        assert r.status_code == 301
+        assert r.headers["Location"] == good_url
 
     url = f"{url_prefix}//"
     r = await client.get(url)
