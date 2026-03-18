@@ -9,9 +9,11 @@ called.
 
 from importlib.metadata import metadata, version
 
+import structlog
 from fastapi import FastAPI
 from safir.logging import Profile, configure_logging, configure_uvicorn_logging
 from safir.middleware.x_forwarded import XForwardedMiddleware
+from safir.slack.webhook import SlackRouteErrorHandler
 
 from .dependencies.config import config_dependency
 from .handlers.internal import internal_router
@@ -48,5 +50,12 @@ def create_app() -> FastAPI:
 
     # Add the middleware
     app.add_middleware(XForwardedMiddleware)
+
+    # Configure Slack alerts.
+    if config.slack_alerts and config.slack_webhook:
+        webhook = config.slack_webhook
+        logger = structlog.get_logger("crawlspace")
+        SlackRouteErrorHandler.initialize(webhook, "crawlspace", logger)
+        logger.debug("Initialized Slack webhook")
 
     return app
