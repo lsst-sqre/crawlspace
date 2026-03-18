@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Request, Response
 from fastapi.responses import RedirectResponse
 from google.cloud import storage
 from safir.dependencies.logger import logger_dependency
+from safir.slack.webhook import SlackRouteErrorHandler
 from structlog.stdlib import BoundLogger
 
 from ..config import BucketConfig
@@ -17,7 +18,7 @@ from ..dependencies.gcs import gcs_client_dependency
 from ..exceptions import GCSFileNotFoundError
 from ..services.file import FileService
 
-v1_router = APIRouter()
+v1_router = APIRouter(route_class=SlackRouteErrorHandler)
 """FastAPI router for v1 API handlers."""
 
 __all__ = ["get_file", "get_root", "head_file", "v1_router"]

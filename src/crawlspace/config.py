@@ -6,7 +6,14 @@ from pathlib import Path
 from typing import Annotated, Self
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import (
+    AliasChoices,
+    BaseModel,
+    ConfigDict,
+    Field,
+    SecretStr,
+    model_validator,
+)
 from pydantic.alias_generators import to_camel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from safir.logging import LogLevel, Profile
@@ -102,6 +109,21 @@ class Config(BaseSettings):
             description="Prefix used for v2 (current API) routes",
         ),
     ] = "/api/hips/v2"
+
+    slack_alerts: bool = Field(
+        False,
+        title="Enable Slack alerts",
+        description="If true, slackWebhook must also be set",
+    )
+
+    slack_webhook: SecretStr | None = Field(
+        None,
+        title="Slack webhook for alerts",
+        description="If set, alerts will be posted to this Slack webhook",
+        validation_alias=AliasChoices(
+            "CRAWLSPACE_SLACK_WEBHOOK", "slackWebhook"
+        ),
+    )
 
     v1_path_prefix: Annotated[
         str,

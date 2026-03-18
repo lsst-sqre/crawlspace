@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Request, Response
 from fastapi.responses import RedirectResponse
 from google.cloud import storage
 from safir.dependencies.logger import logger_dependency
+from safir.slack.webhook import SlackRouteErrorHandler
 from structlog.stdlib import BoundLogger
 
 from ..config import BucketConfig
@@ -18,7 +19,7 @@ from .v1 import head_file as v1_head_file
 
 __all__ = ["v2_router"]
 
-v2_router = APIRouter()
+v2_router = APIRouter(route_class=SlackRouteErrorHandler)
 """FastAPI router for v2 API handlers."""
 
 
