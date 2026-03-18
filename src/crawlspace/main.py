@@ -13,14 +13,18 @@ import structlog
 from fastapi import FastAPI
 from safir.logging import Profile, configure_logging, configure_uvicorn_logging
 from safir.middleware.x_forwarded import XForwardedMiddleware
+from safir.sentry import initialize_sentry
 from safir.slack.webhook import SlackRouteErrorHandler
 
+from . import __version__
 from .dependencies.config import config_dependency
 from .handlers.internal import internal_router
 from .handlers.v1 import v1_router
 from .handlers.v2 import v2_router
 
 __all__ = ["create_app"]
+
+initialize_sentry(release=__version__)
 
 
 def create_app() -> FastAPI:
