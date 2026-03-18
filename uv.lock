@@ -235,6 +235,7 @@ dependencies = [
     { name = "pydantic" },
     { name = "pyyaml" },
     { name = "safir", extra = ["gcs"] },
+    { name = "structlog" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -270,6 +271,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.11" },
     { name = "pyyaml", specifier = ">=6" },
     { name = "safir", extras = ["gcs"], specifier = ">=5" },
+    { name = "structlog", specifier = ">=25" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.34" },
 ]
 

@@ -25,6 +25,7 @@ dependencies = [
     "pyyaml>=6",
     "uvicorn[standard]>=0.34",
     "safir[gcs]>=5",
+    "structlog>=25",
 ]
 dynamic = ["version"]
 
