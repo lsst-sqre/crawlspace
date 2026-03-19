@@ -18,9 +18,8 @@ from safir.slack.webhook import SlackRouteErrorHandler
 
 from . import __version__
 from .dependencies.config import config_dependency
+from .handlers.external import external_router
 from .handlers.internal import internal_router
-from .handlers.v1 import v1_router
-from .handlers.v2 import v2_router
 
 __all__ = ["create_app"]
 
@@ -42,15 +41,14 @@ def create_app() -> FastAPI:
         title="crawlspace",
         description=metadata("crawlspace")["Summary"],
         version=version("crawlspace"),
-        openapi_url=f"{config.v1_path_prefix}/openapi.json",
-        docs_url=f"{config.v1_path_prefix}/docs",
-        redoc_url=f"{config.v1_path_prefix}/redoc",
+        openapi_url=f"{config.path_prefix}/openapi.json",
+        docs_url=f"{config.path_prefix}/docs",
+        redoc_url=f"{config.path_prefix}/redoc",
     )
 
     # Attach the routers.
     app.include_router(internal_router)
-    app.include_router(v2_router, prefix=f"{config.path_prefix}")
-    app.include_router(v1_router, prefix=config.v1_path_prefix)
+    app.include_router(external_router, prefix=config.path_prefix)
 
     # Add the middleware
     app.add_middleware(XForwardedMiddleware)

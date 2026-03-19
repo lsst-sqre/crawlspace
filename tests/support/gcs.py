@@ -78,12 +78,12 @@ def setup_mock_storage(
         case "v1":
             bucket_key = config.default_bucket_key
             bucket = config.get_default_bucket()
-            url_prefix = config.v1_path_prefix
+            url_prefix = config.path_prefix
         case "v2":
             assert param.bucket_key
             bucket_key = param.bucket_key
             bucket = config.buckets[bucket_key]
-            url_prefix = f"{config.path_prefix}/{bucket_key}"
+            url_prefix = f"{config.path_prefix}/v2/{bucket_key}"
 
     # Construct the information used by the tests.
     bucket_info = BucketInfo(

@@ -145,26 +145,6 @@ async def test_get_root(
 
 
 @pytest.mark.asyncio
-async def test_errors(client: AsyncClient, bucket_info: BucketInfo) -> None:
-    url_prefix = bucket_info.url_prefix
-
-    r = await client.get(f"{url_prefix}/missing")
-    assert r.status_code == 404
-
-    for invalid_url in (
-        "%2E%2E/%2E%2E/etc/passwd",
-        "Norder4/",
-        "%2E/index.html",
-        "Norder/Dir0/%2E/Npix1794.png",
-    ):
-        route = f"{url_prefix}/{invalid_url}"
-        r = await client.get(route)
-        assert r.status_code == 422, f"Status for GET {route}"
-        r = await client.head(route)
-        assert r.status_code == 422, f"Status for HEAD {route}"
-
-
-@pytest.mark.asyncio
 async def test_cache_validation(
     client: AsyncClient, data: Data, bucket_info: BucketInfo
 ) -> None:
@@ -239,3 +219,45 @@ async def test_slash_redirect(
     r = await client.head(url)
     assert r.status_code == 301
     assert r.headers["Location"] == f"{url_prefix}/"
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures("mock_gcs")
+async def test_no_bucket_key(client: AsyncClient) -> None:
+    config = config_dependency.config()
+    for route in ("v2", "v2/"):
+        r = await client.get(f"{config.path_prefix}/{route}")
+        assert r.status_code == 404
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures("mock_gcs")
+async def test_bad_bucket_key(client: AsyncClient) -> None:
+    config = config_dependency.config()
+    r = await client.get(
+        f"{config.path_prefix}/v2/nope", follow_redirects=True
+    )
+    assert r.status_code == 404
+    assert "Bucket nope not found" in r.text
+    assert "ds1" in r.text
+    assert "ds2" in r.text
+
+
+@pytest.mark.asyncio
+async def test_bad_paths(client: AsyncClient, bucket_info: BucketInfo) -> None:
+    url_prefix = bucket_info.url_prefix
+
+    r = await client.get(f"{url_prefix}/missing")
+    assert r.status_code == 404
+
+    for invalid_url in (
+        "%2E%2E/%2E%2E/etc/passwd",
+        "Norder4/",
+        "%2E/index.html",
+        "Norder/Dir0/%2E/Npix1794.png",
+    ):
+        route = f"{url_prefix}/{invalid_url}"
+        r = await client.get(route)
+        assert r.status_code == 422, f"Status for GET {route}"
+        r = await client.head(route)
+        assert r.status_code == 422, f"Status for HEAD {route}"
