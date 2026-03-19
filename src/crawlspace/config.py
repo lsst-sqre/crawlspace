@@ -106,7 +106,7 @@ class Config(BaseSettings):
             title="URL prefix",
             description="Prefix used for v2 (current API) routes",
         ),
-    ] = "/api/hips/v2"
+    ] = "/api/hips"
 
     slack_alerts: bool = Field(
         False,
@@ -122,14 +122,6 @@ class Config(BaseSettings):
             "CRAWLSPACE_SLACK_WEBHOOK", "slackWebhook"
         ),
     )
-
-    v1_path_prefix: Annotated[
-        str,
-        Field(
-            title="URL prefix (v1)",
-            description="Prefix used for v1 routes",
-        ),
-    ] = "/api/hips"
 
     def get_default_bucket(self) -> BucketConfig:
         """Return the bucket config for the default bucket."""

@@ -9,6 +9,7 @@ from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from safir.testing.data import Data
+from safir.testing.gcs import MockStorageClient, patch_google_storage
 
 from crawlspace import main
 from crawlspace.dependencies.config import config_dependency
@@ -60,3 +61,8 @@ async def client(app: FastAPI) -> AsyncGenerator[AsyncClient]:
 @pytest.fixture
 def data(request: pytest.FixtureRequest) -> Data:
     return Data(Path(__file__).parent / "data")
+
+
+@pytest.fixture
+def mock_gcs() -> Iterator[MockStorageClient]:
+    yield from patch_google_storage(path=Path(__file__).parent / "files")
