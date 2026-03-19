@@ -108,6 +108,12 @@ class Config(BaseSettings):
         ),
     ] = "/api/hips"
 
+    service_account: str | None = Field(
+        None,
+        title="Google service account",
+        description="Not used directly by crawlspace, only by the Helm chart",
+    )
+
     slack_alerts: bool = Field(
         False,
         title="Enable Slack alerts",
