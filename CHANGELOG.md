@@ -7,6 +7,20 @@ Find changes for the upcoming release in the project's [changelog.d directory](h
 
 <!-- scriv-insert-here -->
 
+<a id='changelog-5.0.0'></a>
+## 5.0.0 (2026-03-18)
+
+### Backwards-incompatible changes
+
+- Rename configuration setting `url_prefix` to `path_prefix`, remove `v1_path_prefix`, and don't allow the v2 path to be separately configurable. Rename `profile` to `log_profile`. This naming more closely matches other projects.
+
+### New features
+
+- Publish multi-platform images that support both linux/amd64 and linux/arm64.
+- Add optional support for sending uncaught exceptions to a Slack alert webhook.
+- Optionally report errors to Sentry.
+- Use JSON format for uvicorn access logs.
+
 <a id='changelog-4.1.0'></a>
 ## 4.1.0 (2025-06-19)
 
