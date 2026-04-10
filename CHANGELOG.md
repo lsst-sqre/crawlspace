@@ -7,6 +7,15 @@ Find changes for the upcoming release in the project's [changelog.d directory](h
 
 <!-- scriv-insert-here -->
 
+<a id='changelog-5.0.1'></a>
+## 5.0.0 (2026-04-10)
+
+### Bug fixes
+
+- Pin `requests` to a lower version to avoid a memory leak. There is no talk in
+  the `requests` changelog or issues of why newer versions show different
+  memory usage, but pinning to an older version fixes our issue.
+
 <a id='changelog-5.0.0'></a>
 ## 5.0.0 (2026-03-18)
 
