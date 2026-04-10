@@ -26,6 +26,10 @@ dependencies = [
     "uvicorn[standard]>=0.34",
     "safir[gcs]>=14.2",
     "structlog>=25",
+
+    # Newer versions of requests cause greatly increased memory usage.
+    # See https://rubinobs.atlassian.net/browse/DM-54612
+    "requests==2.32.3",
 ]
 dynamic = ["version"]
 
