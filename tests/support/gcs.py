@@ -95,5 +95,5 @@ def setup_mock_storage(
     # Patch the GCS library to use this bucket and yield the information.
     path = data.path(f"files/{bucket_key}")
     name = bucket.bucket_name
-    with contextmanager(patch_google_storage)(path=path, bucket_name=name):
+    with patch_google_storage(path=path, bucket_name=name):
         yield bucket_info

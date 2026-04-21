@@ -24,7 +24,7 @@ dependencies = [
     "pydantic>=2.11",
     "pyyaml>=6",
     "uvicorn[standard]>=0.34",
-    "safir[gcs]>=14.2",
+    "safir[gcs]>=15",
     "structlog>=25",
 
     # Newer versions of requests cause greatly increased memory usage.
