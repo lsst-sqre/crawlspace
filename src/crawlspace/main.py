@@ -18,6 +18,7 @@ from safir.slack.webhook import SlackRouteErrorHandler
 
 from . import __version__
 from .dependencies.config import config_dependency
+from .dependencies.context import context_dependency
 from .handlers.external import external_router
 from .handlers.internal import internal_router
 
@@ -29,6 +30,7 @@ initialize_sentry(release=__version__)
 def create_app() -> FastAPI:
     """Create the application."""
     config = config_dependency.config()
+    context_dependency.initialize(config)
     configure_logging(
         profile=config.log_profile,
         log_level=config.log_level,
