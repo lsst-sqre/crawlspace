@@ -11,6 +11,7 @@ from importlib.metadata import metadata, version
 
 import structlog
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from safir.logging import Profile, configure_logging, configure_uvicorn_logging
 from safir.middleware.x_forwarded import XForwardedMiddleware
 from safir.sentry import initialize_sentry
@@ -50,7 +51,25 @@ def create_app() -> FastAPI:
     app.include_router(internal_router)
     app.include_router(external_router, prefix=config.path_prefix)
 
-    # Add the middleware
+    # Add the middleware. Allow any origin for CORS, since crawlspace assumes
+    # it is protected by Gafaelfawr or some similar resource. Gafaelfawr will
+    # block CORS requests from outside the Science Platform.
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origin_regex="https://[a-zA-Z0-9.-]+",
+        allow_credentials=True,
+        allow_methods=["GET"],
+        allow_headers=["Authorization"],
+        expose_headers=[
+            "Retry-After",
+            "WWW-Authenticate",
+            "X-RateLimit-Limit",
+            "X-RateLimit-Remaining",
+            "X-RateLimit-Reset",
+            "X-RateLimit-Resource",
+            "X-RateLimit-Used",
+        ],
+    )
     app.add_middleware(XForwardedMiddleware)
 
     # Configure Slack alerts.
