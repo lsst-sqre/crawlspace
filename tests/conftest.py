@@ -12,6 +12,7 @@ from safir.testing.data import Data
 from safir.testing.gcs import MockStorageClient, patch_google_storage
 
 from crawlspace import main
+from crawlspace.config import Config
 from crawlspace.dependencies.config import config_dependency
 
 from .support.gcs import BucketInfo, FixtureParameter, setup_mock_storage
@@ -25,13 +26,19 @@ _MOCK_BUCKETS = [
 
 
 @pytest_asyncio.fixture
-async def app(data: Data) -> AsyncGenerator[FastAPI]:
+async def config(data: Data) -> Config:
+    """Return a Config object initialized from a test config file."""
+    config_dependency.set_config_path(data.path("config/base.yaml"))
+    return config_dependency.config()
+
+
+@pytest_asyncio.fixture
+async def app(config: Config) -> AsyncGenerator[FastAPI]:
     """Return a configured test application.
 
     Wraps the application in a lifespan manager so that startup and shutdown
     events are sent during test execution.
     """
-    config_dependency.set_config_path(data.path("config/base.yaml"))
     app = main.create_app()
     async with LifespanManager(app):
         yield app
@@ -41,10 +48,9 @@ async def app(data: Data) -> AsyncGenerator[FastAPI]:
     params=_MOCK_BUCKETS, ids=[f.fixture_id for f in _MOCK_BUCKETS]
 )
 def bucket_info(
-    data: Data, request: pytest.FixtureRequest
+    config: Config, data: Data, request: pytest.FixtureRequest
 ) -> Iterator[BucketInfo]:
     """Set up a parametrized mock Google storage bucket."""
-    config = config_dependency.config()
     with setup_mock_storage(config, data, request.param) as bucket_info:
         yield bucket_info
 

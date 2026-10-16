@@ -109,21 +109,21 @@ async def assert_files_match(
 
 @pytest.mark.asyncio
 async def test_get(
-    client: AsyncClient, data: Data, bucket_info: BucketInfo
+    bucket_info: BucketInfo, client: AsyncClient, data: Data
 ) -> None:
     await assert_files_match(client, data, bucket_info)
 
 
 @pytest.mark.asyncio
 async def test_head(
-    client: AsyncClient, data: Data, bucket_info: BucketInfo
+    bucket_info: BucketInfo, client: AsyncClient, data: Data
 ) -> None:
     await assert_files_match(client, data, bucket_info, head=True)
 
 
 @pytest.mark.asyncio
 async def test_get_root(
-    client: AsyncClient, data: Data, bucket_info: BucketInfo
+    bucket_info: BucketInfo, client: AsyncClient, data: Data
 ) -> None:
     bucket_key = bucket_info.bucket_key
     object_prefix = bucket_info.object_prefix
@@ -146,7 +146,7 @@ async def test_get_root(
 
 @pytest.mark.asyncio
 async def test_cache_validation(
-    client: AsyncClient, data: Data, bucket_info: BucketInfo
+    bucket_info: BucketInfo, client: AsyncClient, data: Data
 ) -> None:
     bucket_key = bucket_info.bucket_key
     object_prefix = bucket_info.object_prefix
@@ -196,7 +196,7 @@ async def test_cache_validation(
 
 @pytest.mark.asyncio
 async def test_slash_redirect(
-    client: AsyncClient, bucket_info: BucketInfo
+    bucket_info: BucketInfo, client: AsyncClient
 ) -> None:
     url_prefix = bucket_info.url_prefix
 
@@ -244,7 +244,7 @@ async def test_bad_bucket_key(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_bad_paths(client: AsyncClient, bucket_info: BucketInfo) -> None:
+async def test_bad_paths(bucket_info: BucketInfo, client: AsyncClient) -> None:
     url_prefix = bucket_info.url_prefix
 
     r = await client.get(f"{url_prefix}/missing")
