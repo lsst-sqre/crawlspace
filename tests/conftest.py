@@ -64,6 +64,6 @@ def data(request: pytest.FixtureRequest) -> Data:
 
 
 @pytest.fixture
-def mock_gcs() -> Iterator[MockStorageClient]:
-    with patch_google_storage(path=Path(__file__).parent / "files") as mock:
+def mock_gcs(data: Data) -> Iterator[MockStorageClient]:
+    with patch_google_storage(path=data.path("files")) as mock:
         yield mock
