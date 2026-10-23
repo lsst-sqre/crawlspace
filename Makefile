@@ -1,6 +1,6 @@
 .PHONY: help
 help:
-	@echo "Make targets for {{ cookiecutter.name }}"
+	@echo "Make targets for crawlspace"
 	@echo "make init - Set up dev environment"
 	@echo "make run - Start a local development instance"
 	@echo "make update - Update pinned dependencies and run make init"
@@ -9,11 +9,11 @@ help:
 .PHONY: init
 init:
 	uv sync --frozen --all-groups
-	uv run pre-commit install
+	uv run prek install
 
 .PHONY: run
 run:
-	uv run --only-group=tox tox run -e run
+	uv run --only-group=nox nox -s run
 
 .PHONY: update
 update: update-deps init
@@ -21,5 +21,5 @@ update: update-deps init
 .PHONY: update-deps
 update-deps:
 	uv lock --upgrade
-	uv run --only-group=lint pre-commit autoupdate
-	./scripts/update-uv-version.sh
+	uv run --only-group=lint prek autoupdate
+	scripts/update-uv-version.sh
