@@ -6,6 +6,7 @@ from typing import Annotated, Self
 import yaml
 from pydantic import (
     AliasChoices,
+    AliasGenerator,
     BaseModel,
     ConfigDict,
     Field,
@@ -23,7 +24,9 @@ class BucketConfig(BaseModel):
     """Configuration for a GCS bucket used as an object source."""
 
     model_config = ConfigDict(
-        alias_generator=to_camel, extra="forbid", validate_by_name=True
+        alias_generator=AliasGenerator(validation_alias=to_camel),
+        extra="forbid",
+        validate_by_name=True,
     )
 
     bucket_name: Annotated[str, Field(title="Bucket name")]
@@ -44,7 +47,9 @@ class Config(BaseSettings):
     """Configuration for crawlspace."""
 
     model_config = SettingsConfigDict(
-        alias_generator=to_camel, extra="forbid", validate_by_name=True
+        alias_generator=AliasGenerator(validation_alias=to_camel),
+        extra="forbid",
+        validate_by_name=True,
     )
 
     buckets: Annotated[
