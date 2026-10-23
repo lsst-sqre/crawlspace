@@ -46,6 +46,9 @@ jobs:
     uses: lsst-sqre/multiplatform-build-and-push/.github/workflows/build.yaml@v4
     with:
       images: ghcr.io/${{ github.repository }}
+    concurrency:
+      group: docker
+      queue: max
 
     # Only do Docker builds of releases and pull requests from ticket
     # branches. This will still trigger on pull requests from untrusted
