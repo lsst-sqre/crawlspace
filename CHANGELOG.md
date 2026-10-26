@@ -7,6 +7,13 @@ Find changes for the upcoming release in the project's [changelog.d directory](h
 
 <!-- scriv-insert-here -->
 
+<a id='changelog-5.1.0'></a>
+## 5.1.0 (2026-10-26)
+
+### New features
+
+- Allow cross-site requests with credentials from any domain. Note that crawlspace is normally deployed behind Gafaelfawr, which will reject CORS preflight requests from outside the local protected environment before sending them to the protected service.
+
 <a id='changelog-5.0.1'></a>
 ## 5.0.1 (2026-04-10)
 

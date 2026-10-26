@@ -5,6 +5,10 @@ resolution-markers = [
     "python_full_version >= '3.15'",
     "python_full_version < '3.15'",
 ]
+required-markers = [
+    "platform_machine == 'x86_64' and sys_platform == 'manylinux'",
+    "platform_machine == 'aarch64' and sys_platform == 'manylinux'",
+]
 
 [[package]]
 name = "annotated-doc"
